@@ -74,8 +74,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 	protected ImageButton howtoUse;
 	protected Button startStop;
 	protected boolean btOn = false;
-	protected boolean disabledStartButton = false; // On BT turns off the
-													// receiving button
+	protected boolean disabledStartButton = false; // On BT turns off the receiving button
 	protected boolean isSensing = false;
 	protected boolean readytoSend = false;
 	protected boolean fromBT = false;
@@ -286,8 +285,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 							}
 
 						} else if (position == 3) {
-							MyViewFlipper.setDisplayedChild(1); // Photogate
-																// view
+							MyViewFlipper.setDisplayedChild(1); // Photogate view
 							sensorType = 3; // Pendulum
 							contextualHelp.setText(R.string.pendulum_help);
 						}
@@ -670,20 +668,16 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 				return;
 			} else if ((readytoSend == true) && (sensorType == 2)) { // Photogate pulse with two phones
 				sendMessage("addTimer");
-				if (disabledStartButton == true) { // If stopping phone before,
-													// make it the stopping
-													// phone again
+				if (disabledStartButton == true) { // If this was the stopping phone before, make it the stopping phone again
 					resetForSensing();
 					contextualHelp.setText(R.string.gate2_stop_help);
 					startStop.setEnabled(false);
 					startStop.setText("Check other phone");
-				} else if (disabledStartButton == false) { // If starting phone before, make it
-															// the stopping phone
+				} else if (disabledStartButton == false) { // If this was the starting phone before, make it the stopping phone
 					resetForSensing();
 					contextualHelp.setText(R.string.gate2_start_help);
 				}
-			} else if ((readytoSend == true) && (sensorType != 2)) { // Reset the contextual help
-																	 // on added time
+			} else if ((readytoSend == true) && (sensorType != 2)) { // Reset the contextual help on added time
 				resetForSensing();
 				if (sensorType == 0) {
 					contextualHelp.setText(R.string.accel_help);
@@ -753,12 +747,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) { // If back button is
-															// pressed while BT
-															// is synced, warn
-															// user with toast
-															// before backing
-															// out of app.
+	public boolean onKeyDown(int keyCode, KeyEvent event) { // If back button is pressed while BT is synced, warn user with toast before backing out of app.
 		// Handle the back button
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			if ((btOn == true)
@@ -792,19 +781,13 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
 	private void generateCsvFile(String fileName) {
 		try {
-			File sdCard = Environment.getExternalStorageDirectory(); // Necessary to get
-																	 // the sdcard directory
-																     // as it may be different
-																	// for different phones
-			File dir = new File(sdCard.getAbsolutePath() + "/ScienceData"); // Save in ScienceData
-																			// folder on SD card
+			File sdCard = Environment.getExternalStorageDirectory(); // Necessary to get the sdcard directory as it may be different for different phones
+			File dir = new File(sdCard.getAbsolutePath() + "/ScienceData"); // Save in ScienceData folder on SD card
 			dir.mkdirs();
 			csvFile = new File(dir, fileName);
 			FileWriter writer = new FileWriter(csvFile);
 			if (sensorType == 0) {
-				writer.append("time (ms)"); // Categories In 1.2 version the
-											// data headers were made lowercase
-											// and units were added.
+				writer.append("time (ms)"); // Categories In version 1.2 the data headers were made lowercase and units were added.
 				writer.append(","); // Comma Separated Values (csv)
 				writer.append("x (m/m^2)");
 				writer.append(",");
@@ -823,8 +806,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 				writer.flush();
 				writer.close();
 			}
-		} catch (IOException e) // If the name of the file is illegal then no
-								// file is created
+		} catch (IOException e) // If the name of the file is illegal then no file is created
 		{
 			e.printStackTrace();
 		}
@@ -852,8 +834,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 					sensingTime.setText(String
 							.valueOf(millisUntilFinished / 1000) + " sec");
 				}
-				timeElapsed += dt;  //Record the time in the csv for graphing
-									// purposes
+				timeElapsed += dt;  //Record the time in the csv for graphing purposes
 				if (sensorType == 0) {
 					try {
 						FileWriter writer = new FileWriter(csvFile, true);
@@ -930,8 +911,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 	}
 
 	@Override
-	public void afterTextChanged(Editable s) { // If the name of the data
-												// changed then change the file name
+	public void afterTextChanged(Editable s) { // If the name of the data changed then change the file name
 		currentName = s.toString();
 	}
 
@@ -972,12 +952,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 					if (isSensing) {
 						eventCount += 1;
 						tempPulseTime2 = timeElapsed;
-						photoTime = String.valueOf(tempPulseTime2); // Count time from
-																	// sensor covered
-																	// to sensor uncovered
+						photoTime = String.valueOf(tempPulseTime2); // Count time from sensor covered to sensor uncovered
 						newPhotoData = true;
-						if (eventCount > 3) { // Allows data events to scroll up
-												// the page
+						if (eventCount > 3) { // Allows data events to scroll up the page
 							proximityOccurance1.setText(proximityOccurance2
 									.getText());
 							proximityTime1.setText(proximityTime2.getText());
@@ -1023,11 +1000,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 								fromSensor = true;
 								sendMessage("pulse");
 
-								if (fromBT == true) { // Reset the variables,
-														// not needed right now
-														// but if later more
-														// events are added this
-														// will be necessary.
+								if (fromBT == true) { // Reset the variables, not needed right now but if later more events are added this will be necessary.
 									fromBT = false;
 									fromSensor = false;
 								}
@@ -1046,9 +1019,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 						if (proximityOccurance % 2 == 1) {// Every odd swing
 							photoTemp1 = timeElapsed;
 						}
-						if (proximityOccurance % 2 == 0) { // Allows data events
-															// to scroll up the
-															// page
+						if (proximityOccurance % 2 == 0) { // Allows data events to scroll up the page
 							photoTemp2 = timeElapsed;
 							eventCount += 1;
 							photoTime = String.valueOf(photoTemp2 - photoTemp1);
