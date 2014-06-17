@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   <style name="myTheme" parent="@android:style/Theme.Holo.NoActionBar">
+	<item name="android:imageButtonStyle">@android:style/Widget.Holo.Button.Borderless</item>
+	<item name="android:borderlessButtonStyle">@android:style/Widget.Holo.Button.Borderless</item>
+   </style>
+</resources>
