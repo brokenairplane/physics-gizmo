@@ -10,10 +10,7 @@
     <string name="quit">Are you sure you want to leave?</string>
     <string name="bt_sensing_interrupt">If you stop now, you will lose your Bluetooth connection and need to restart PhysicsGizmo on phones to reestablish a link.</string>
     <string name="ok">I understand</string>
-<<<<<<< HEAD
     <string name="blog_url">http://www.brokenairplane.com/2011/10/android-education-science-physicsgizmo.html</string>
-=======
->>>>>>> d2750d87edd23de2c12e2e55170007aa7635f06b
     <string name="cancel">Cancel</string>
     <string name="data_label">Data: </string>
     <string name="data_warning">Names cannot contain punctuation    </string>
@@ -27,10 +24,7 @@
     <string name="start_sensing">Start Sensing</string>
     <string name="bt_label">Time:</string>
     <string name="accel_help">    </string>
-<<<<<<< HEAD
     <string name="not_connected_msg">Not Connected</string>
-=======
->>>>>>> d2750d87edd23de2c12e2e55170007aa7635f06b
     <string name="gate2_stop_help">If Bluetooth is on, stops timer</string>
     <string name="gate2_not_connected_help">Restart app to turn on Bluetooth/Discovery</string>
     <string name="stopped_help">Add more time to sense again</string>
@@ -43,14 +37,11 @@
     <string-array name="sensors_array">
         <item>Accelerometer</item>
         <item>Photogate</item> </string-array>
-<<<<<<< HEAD
     <string name="accel_units">meters/sec<sup><small>2</small></sup></string>
     <string name="sensor_mode_name_accel">Accelerometer</string>
     <string name="sensor_mode_name_photo_pendulum">Photogate Pendulum</string>
     <string name="sensor_mode_name_photo_one_phone">Photogate Pulse with 1 Phone</string>
     <string name="sensor_mode_name_photo_two_phones">Photogate Pulse with 2 Phones</string>
-=======
->>>>>>> d2750d87edd23de2c12e2e55170007aa7635f06b
     <string name="sensor">Accelerometer</string>
     <string name="about_accelerometer">Blah</string>
     <string name="about_photogate">Photo Blah</string>
@@ -59,20 +50,12 @@
     <string name="send">Send</string>
     <string name="not_connected">You are not connected to a device</string>
     <string name="bt_not_enabled_leaving">Bluetooth was not enabled.</string>
-<<<<<<< HEAD
     <string name="title_connecting">Connecting#8230;</string>
-=======
-    <string name="title_connecting">Connecting...</string>
->>>>>>> d2750d87edd23de2c12e2e55170007aa7635f06b
     <string name="title_connected_to">Connected: </string>
     <string name="title_not_connected">Not Connected</string>
 
     <!--  DeviceListActivity -->
-<<<<<<< HEAD
     <string name="scanning">Scanning for devices#8230;</string>
-=======
-    <string name="scanning">Scanning for devices...</string>
->>>>>>> d2750d87edd23de2c12e2e55170007aa7635f06b
     <string name="select_device">Select a device to connect</string>
     <string name="none_paired">No devices have been paired</string>
     <string name="none_found">No devices found</string>
