@@ -1,7 +1,7 @@
-/*Physics Gizmo by Phil Wagner
- *A free Android app so everyone can do science and analyze data.
- *www.brokenairplane.com
- *This code can be reused with attribution.
+/** Physics Gizmo by Phil Wagner
+ * A free Android app so everyone can do science and analyze data.
+ * www.brokenairplane.com
+ * This code can be reused with attribution.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -159,175 +159,26 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
  
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+    
 		setContentView(R.layout.main);
-
-		// Connect XML to UI
-		startStop = (Button) findViewById(R.id.start_stop);
-		howtoUse = (ImageButton) findViewById(R.id.how_to_use);
-		dataName = (EditText) findViewById(R.id.data_name);
-		addTime = (ImageButton) findViewById(R.id.add_time);
-		subtractTime = (ImageButton) findViewById(R.id.subtract_time);
-		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-		sensorSpinner = (Spinner) findViewById(R.id.sensor_spinner);
-		btLabel = (TextView) findViewById(R.id.bt_label);
-		btUnits = (TextView) findViewById(R.id.bt_units);
-		sensingTime = (TextView) findViewById(R.id.sensing_time);
-		contextualHelp = (TextView) findViewById(R.id.contextual_help);
-		proximityOccurance1 = (TextView) findViewById(R.id.prox_occurance1);
-		proximityOccurance2 = (TextView) findViewById(R.id.prox_occurance2);
-		proximityOccurance3 = (TextView) findViewById(R.id.prox_occurance3);
-		proximityTime1 = (TextView) findViewById(R.id.prox_time1);
-		proximityTime2 = (TextView) findViewById(R.id.prox_time2);
-		proximityTime3 = (TextView) findViewById(R.id.prox_time3);
-		proximityTimeOnly = (TextView) findViewById(R.id.prox_time_only);
-		xAccelUnits = (TextView) findViewById(R.id.xAccelUnits);
-		yAccelUnits = (TextView) findViewById(R.id.yAccelUnits);
-		zAccelUnits = (TextView) findViewById(R.id.zAccelUnits);
-		xValue = (TextView) findViewById(R.id.x_value);
-		yValue = (TextView) findViewById(R.id.y_value);
-		zValue = (TextView) findViewById(R.id.z_value);
-		v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-		MyViewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
-		mTitle = (TextView) findViewById(R.id.mytitle);
-		mTitle.setText(R.string.app_name);
-
-		// Click listeners
-		addTime.setOnClickListener(this);
-		dataName.addTextChangedListener(this);
-		howtoUse.setOnClickListener(this);
-		subtractTime.setOnClickListener(this);
-		startStop.setOnClickListener(this);
-
-		// Sensing mode names
-		final String MODE_NAME_ACCEL =
-				getString(R.string.sensor_mode_name_accel);
-		final String MODE_NAME_PHOTO_PENDULUM =
-				getString(R.string.sensor_mode_name_photo_pendulum);
-		final String MODE_NAME_PHOTO_ONE_PHONE =
-				getString(R.string.sensor_mode_name_photo_one_phone);
-		final String MODE_NAME_PHOTO_TWO_PHONES =
-				getString(R.string.sensor_mode_name_photo_two_phones);
-		
-		// Sensors
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-				SensorManager.SENSOR_DELAY_GAME);
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY),
-				SensorManager.SENSOR_DELAY_GAME);
-
+		connectXMLtoJava();
+		addUIClickListeners();
+		addSensorListeners();
 		setupDate(); //Get date for the title of the csv file
-
-		// Formatting for acceleration units
-		xAccelUnits.setText(Html
-				.fromHtml("meters/sec<sup><small>2</small></sup"));
-		yAccelUnits.setText(Html
-				.fromHtml("meters/sec<sup><small>2</small></sup"));
-		zAccelUnits.setText(Html
-				.fromHtml("meters/sec<sup><small>2</small></sup"));
-
-		// Spinner for sensors
-		// # of sensors determined by if Android version is higher than 2.0.
-		final ArrayAdapter<CharSequence> sensorAdapter =
-				new ArrayAdapter<CharSequence>(
-				this, android.R.layout.simple_spinner_item);
-		sensorAdapter
-				.setDropDownViewResource(
-						android.R.layout.simple_spinner_dropdown_item);
-		if (sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() > 0) {
-			sensorAdapter.add(MODE_NAME_ACCEL);
-		}
-		if (sensorManager.getSensorList(Sensor.TYPE_PROXIMITY).size() > 0) {
-			sensorAdapter.add(MODE_NAME_PHOTO_PENDULUM);
-			sensorAdapter.add(MODE_NAME_PHOTO_ONE_PHONE);
-			// Android 2.0+ needed for Bluetooth.
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
-				sensorAdapter.add(MODE_NAME_PHOTO_TWO_PHONES);
-			}
-		}
-
-		sensorSpinner.setAdapter(sensorAdapter);
-		sensorSpinner.setSelection(0, true);
-		sensorSpinner
-		  .setOnItemSelectedListener(
-		      new AdapterView.OnItemSelectedListener() {
-					@Override
-					public void onItemSelected(AdapterView<?> parent, View v,
-							int position, long id) {
-						final String selectedSensor = sensorSpinner.getAdapter()
-								.getItem(position).toString();
-						if (MODE_NAME_ACCEL.equals(selectedSensor)) {
-              disabledStartButton = false;
-              startStop.setEnabled(true);
-              MyViewFlipper.setDisplayedChild(0);
-              resetForSensing();
-              contextualHelp.setText(R.string.accel_help);
-              sensorType = 0;
-            } else if (MODE_NAME_PHOTO_PENDULUM.equals(selectedSensor)) {
-              // Photogate view
-              MyViewFlipper.setDisplayedChild(1);
-              sensorType = 3; // Pendulum
-              contextualHelp.setText(R.string.pendulum_help);
-            } else if (MODE_NAME_PHOTO_ONE_PHONE.equals(selectedSensor)) {
-              // Photogate with 1 phone
-              disabledStartButton = false;
-              startStop.setEnabled(true);
-              // Photogate view
-              MyViewFlipper.setDisplayedChild(1);
-              resetForSensing();
-              contextualHelp.setText(R.string.gate1_help);
-              sensorType = 1;
-            } else if (MODE_NAME_PHOTO_TWO_PHONES.equals(selectedSensor)) {
-              if (sensorAdapter.getCount() == 3) {
-                disabledStartButton = false;
-                startStop.setEnabled(true);
-                // Photogate view
-                MyViewFlipper.setDisplayedChild(1);
-                sensorType = 3; // Pendulum
-                resetForSensing();
-                contextualHelp.setText(R.string.pendulum_help);
-              } else {
-                sensorType = 2; // Gate 2
-                if (mTitle.getText().toString() ==
-                    getString(R.string.not_connected_msg)) {
-                  ensureDiscoverable();
-                  // Photogate 2 view
-                  MyViewFlipper.setDisplayedChild(2);
-                  resetForSensing();
-                  contextualHelp
-                      .setText(R.string.gate2_start_help);
-                } else {
-                  // Photogate 2 view
-                  MyViewFlipper.setDisplayedChild(2);
-                  contextualHelp
-                      .setText(R.string.gate2_stop_help);
-                  disabledStartButton = true;
-                  startStop.setEnabled(false);
-                  startStop.setText("Check other phone");
-                }
-              }
-            }
-					}
-
-          @Override
-          public void onNothingSelected(AdapterView<?> parent) {
-            // TODO Auto-generated method stub
-            
-          }
-				});
-
-		// /////////////////////////////////////////////////////////////////////
-		if (D) {
-			Log.e(TAG, "+++ ON CREATE +++");
-		}
+		setupSensorSpinner();
+		setUnitFormatting();
 		
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
+		
+    if (D) {
+      Log.e(TAG, "+++ ON CREATE +++");
+    }
 	}
 
-  // /////////////////////////////////////////////////////////////////////////
+
+  
+
 
   @Override
   public void onStart() {
@@ -348,8 +199,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       }
     }
   }
-
-  // /////////////////////////////////////////////////////////////////////////
 
   @Override
   protected void onPause() {
@@ -424,7 +273,57 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
-  // /////////////////////////////////////////////////////////////////////////
+  private void connectXMLtoJava(){
+    /**
+     * Connect XML to UI
+     */
+    startStop = (Button) findViewById(R.id.start_stop);
+    howtoUse = (ImageButton) findViewById(R.id.how_to_use);
+    dataName = (EditText) findViewById(R.id.data_name);
+    addTime = (ImageButton) findViewById(R.id.add_time);
+    subtractTime = (ImageButton) findViewById(R.id.subtract_time);
+    sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+    sensorSpinner = (Spinner) findViewById(R.id.sensor_spinner);
+    btLabel = (TextView) findViewById(R.id.bt_label);
+    btUnits = (TextView) findViewById(R.id.bt_units);
+    sensingTime = (TextView) findViewById(R.id.sensing_time);
+    contextualHelp = (TextView) findViewById(R.id.contextual_help);
+    proximityOccurance1 = (TextView) findViewById(R.id.prox_occurance1);
+    proximityOccurance2 = (TextView) findViewById(R.id.prox_occurance2);
+    proximityOccurance3 = (TextView) findViewById(R.id.prox_occurance3);
+    proximityTime1 = (TextView) findViewById(R.id.prox_time1);
+    proximityTime2 = (TextView) findViewById(R.id.prox_time2);
+    proximityTime3 = (TextView) findViewById(R.id.prox_time3);
+    proximityTimeOnly = (TextView) findViewById(R.id.prox_time_only);
+    xAccelUnits = (TextView) findViewById(R.id.xAccelUnits);
+    yAccelUnits = (TextView) findViewById(R.id.yAccelUnits);
+    zAccelUnits = (TextView) findViewById(R.id.zAccelUnits);
+    xValue = (TextView) findViewById(R.id.x_value);
+    yValue = (TextView) findViewById(R.id.y_value);
+    zValue = (TextView) findViewById(R.id.z_value);
+    v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+    MyViewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
+    mTitle = (TextView) findViewById(R.id.mytitle);
+    mTitle.setText(R.string.app_name);
+  }
+  
+  private void addUIClickListeners() {
+    addTime.setOnClickListener(this);
+    dataName.addTextChangedListener(this);
+    howtoUse.setOnClickListener(this);
+    subtractTime.setOnClickListener(this);
+    startStop.setOnClickListener(this);
+  }
+  
+  private void addSensorListeners() {
+    sensorManager.registerListener(this,
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+        SensorManager.SENSOR_DELAY_GAME);
+    sensorManager.registerListener(this,
+        sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY),
+        SensorManager.SENSOR_DELAY_GAME);
+  }
+  
   private void setupConnectedSensing() {
 
     // Initialize the BluetoothService to perform Bluetooth connections
@@ -434,10 +333,130 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     mOutStringBuffer = new StringBuffer("");
   }
 
-  // /////////////////////////////////////////////////////////////////////////
+  private void setupSensorSpinner() {
+    /** 
+     * Spinner for the user to select a sensor to use.
+     */
+    
+    // Sensing mode names
+    final String MODE_NAME_ACCEL =
+        getString(R.string.sensor_mode_name_accel);
+    final String MODE_NAME_PHOTO_PENDULUM =
+        getString(R.string.sensor_mode_name_photo_pendulum);
+    final String MODE_NAME_PHOTO_ONE_PHONE =
+        getString(R.string.sensor_mode_name_photo_one_phone);
+    final String MODE_NAME_PHOTO_TWO_PHONES =
+        getString(R.string.sensor_mode_name_photo_two_phones);
+    
+    final ArrayAdapter<CharSequence> sensorAdapter =
+        new ArrayAdapter<CharSequence>(
+        this, android.R.layout.simple_spinner_item);
+    sensorAdapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item);
+    if (sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() > 0) {
+      sensorAdapter.add(MODE_NAME_ACCEL);
+    }
+    if (sensorManager.getSensorList(Sensor.TYPE_PROXIMITY).size() > 0) {
+      sensorAdapter.add(MODE_NAME_PHOTO_PENDULUM);
+      sensorAdapter.add(MODE_NAME_PHOTO_ONE_PHONE);
+      // Android 2.0+ needed for Bluetooth.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
+        sensorAdapter.add(MODE_NAME_PHOTO_TWO_PHONES);
+      }
+    }
 
-  // /////////////////////////////////////////////////////////////////////////
+    sensorSpinner.setAdapter(sensorAdapter);
+    sensorSpinner.setSelection(0, true);  // Default is accelerometer.
+    sensorSpinner.setOnItemSelectedListener(
+      new AdapterView.OnItemSelectedListener() {
+      @Override
+      public void onItemSelected(AdapterView<?> parent, View v,
+          int position, long id) {
+        final String selectedSensor = sensorSpinner.getAdapter()
+            .getItem(position).toString();
+        if (MODE_NAME_ACCEL.equals(selectedSensor)) {
+          disabledStartButton = false;
+          startStop.setEnabled(true);
+          MyViewFlipper.setDisplayedChild(0);
+          resetForSensing();
+          contextualHelp.setText(R.string.accel_help);
+          sensorType = 0;
+        } else if (MODE_NAME_PHOTO_PENDULUM.equals(selectedSensor)) {
+          // Photogate view
+          MyViewFlipper.setDisplayedChild(1);
+          sensorType = 3; // Pendulum
+          contextualHelp.setText(R.string.pendulum_help);
+        } else if (MODE_NAME_PHOTO_ONE_PHONE.equals(selectedSensor)) {
+          // Photogate with 1 phone
+          disabledStartButton = false;
+          startStop.setEnabled(true);
+          // Photogate view
+          MyViewFlipper.setDisplayedChild(1);
+          resetForSensing();
+          contextualHelp.setText(R.string.gate1_help);
+          sensorType = 1;
+        } else if (MODE_NAME_PHOTO_TWO_PHONES.equals(selectedSensor)) {
+          if (sensorAdapter.getCount() == 3) {
+            disabledStartButton = false;
+            startStop.setEnabled(true);
+            // Photogate view
+            MyViewFlipper.setDisplayedChild(1);
+            sensorType = 3; // Pendulum
+            resetForSensing();
+            contextualHelp.setText(R.string.pendulum_help);
+          } else {
+            sensorType = 2; // Gate 2
+            prepareEachPhoneForBluetoothPhotogate();
+          }
+        }
+      }
 
+      private void prepareEachPhoneForBluetoothPhotogate() {
+        /**
+         * The primary phone starts the sensing, the other phone is the
+         * receiving phone (stops the sensing).
+         */
+        if (mTitle.getText().toString() ==
+            getString(R.string.not_connected_msg)) {
+          ensureDiscoverable();
+          // Photogate 2 view
+          MyViewFlipper.setDisplayedChild(2);
+          resetForSensing();
+          contextualHelp
+              .setText(R.string.gate2_start_help);
+        } else {
+          // Photogate 2 view
+          MyViewFlipper.setDisplayedChild(2);
+          contextualHelp
+              .setText(R.string.gate2_stop_help);
+          disabledStartButton = true;
+          startStop.setEnabled(false);
+          startStop.setText("Check other phone");
+        }
+      }
+
+      @Override
+      public void onNothingSelected(AdapterView<?> parent) {
+        // TODO Auto-generated method stub
+        
+      }
+      
+      
+    });
+  }
+  
+  private void setUnitFormatting() {
+    /**
+     * Formatting for acceleration units.
+     */
+    xAccelUnits.setText(Html
+        .fromHtml("meters/sec<sup><small>2</small></sup"));
+    yAccelUnits.setText(Html
+        .fromHtml("meters/sec<sup><small>2</small></sup"));
+    zAccelUnits.setText(Html
+        .fromHtml("meters/sec<sup><small>2</small></sup"));    
+  }
+  
   // Ask user to make phone discoverable
   private void ensureDiscoverable() {
     if (D) {
