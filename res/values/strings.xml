@@ -11,6 +11,9 @@
     <string name="bt_sensing_interrupt">If you stop now, you will lose your Bluetooth connection and need to restart PhysicsGizmo on phones to reestablish a link.</string>
     <string name="ok">I understand</string>
     <string name="blog_url">http://www.brokenairplane.com/2011/10/android-education-science-physicsgizmo.html</string>
+    <string name="email_subject">Science Data</string>
+    <string name="email_body1">Attached is the </string>
+    <string name="email_body2"> data.</string>
     <string name="cancel">Cancel</string>
     <string name="data_label">Data: </string>
     <string name="data_warning">Names cannot contain punctuation    </string>
@@ -34,6 +37,7 @@
     <string name="z_label">Z:</string>
     <string name="event_label">Event:</string>
     <string name="event_units">ms</string>
+    <string name="timer_units"> sec</string>
     <string-array name="sensors_array">
         <item>Accelerometer</item>
         <item>Photogate</item> </string-array>

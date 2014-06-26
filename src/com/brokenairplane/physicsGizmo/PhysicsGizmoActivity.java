@@ -121,7 +121,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected Vibrator v;
   protected ViewFlipper MyViewFlipper;
 
-  // /////////////////////////////////////////////////////////////////////////
   // Debugging
   private final String TAG = "PhysicsGizmoActivity";
   private final boolean D = false;
@@ -153,15 +152,17 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   private BluetoothAdapter mBluetoothAdapter = null;
   // Member object for the chat services
   private PhysicsGizmoBluetoothService mBluetoothService = null;
-
-  // /////////////////////////////////////////////////////////////////////////
-
+  
  
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-    
+		
+		if (D) {
+      Log.e(TAG, "+++ ON CREATE +++");
+    }
+		
 		setContentView(R.layout.main);
-		connectXMLtoJava();
+		connectXMLViewtoJava();
 		addUIClickListeners();
 		addSensorListeners();
 		setupDate(); //Get date for the title of the csv file
@@ -170,14 +171,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 		
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		
-    if (D) {
-      Log.e(TAG, "+++ ON CREATE +++");
-    }
 	}
-
-
-  
 
 
   @Override
@@ -186,19 +180,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     if (D) {
       Log.e(TAG, "++ ON START ++");
     }
-    // If BT not enabled, request it to be enabled.
+    
     if (mBluetoothAdapter != null) {
-      if (!mBluetoothAdapter.isEnabled()) {
-        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        // Otherwise, setup the connection between the two phones
-      } else {
-        if (mBluetoothService == null) {
-          setupConnectedSensing();
-        }
-      }
+      requestBluetoothEnabled();
     }
   }
+
 
   @Override
   protected void onPause() {
@@ -211,12 +198,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       senseCountDownTimer.cancel();
       senseCountDownTimer.onFinish();
     }
-    proximityOccurance = 0;
-    eventCount = 0;
-    photoTemp1 = 0;
-    photoTemp2 = 0;
-    photoTemp3 = 0;
+    resetSensorOccuranceVariables();
+
   }
+
+
+
 
   @Override
   protected void onResume() {
@@ -225,22 +212,21 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       Log.e(TAG, "+ ON RESUME +");
     }
 
-    // /////////////////////////////////////////////////////////////////////
-    // Performing this check in onResume() covers the case in which BT was
-    // not enabled during onStart(), so we were paused to enable it...
-    // onResume() will be called when ACTION_REQUEST_ENABLE activity
-    // returns.
+    /**
+     * Performing this check in onResume() covers the case in which BT was not
+     * enabled during onStart(), so we were paused to enable it.
+     * onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+     * Only if state == STATE_NONE, do we know that we haven't started already.
+     */
     if (mBluetoothService != null) {
-      // Only if the state is STATE_NONE, do we know that we haven't
-      // started already
-      if (mBluetoothService.getState() == PhysicsGizmoBluetoothService.STATE_NONE) {
-        // Start the Bluetooth chat services
+      if (mBluetoothService.getState() ==
+          PhysicsGizmoBluetoothService.STATE_NONE) {
         mBluetoothService.start();
       }
     }
-    // /////////////////////////////////////////////////////////////////////
   }
 
+  
   @Override
   public void onStop() {
     super.onStop();
@@ -249,6 +235,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
+  
   @Override
   public void onDestroy() {
     super.onDestroy();
@@ -257,11 +244,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     fromSensor = false;
     photoBT = 0;
     photoSensor = 0;
-    proximityOccurance = 0;
-    eventCount = 0;
-    photoTemp1 = 0;
-    photoTemp2 = 0;
-    photoTemp3 = 0;
+    resetSensorOccuranceVariables();
     senseTime = 10;
     timeElapsed = 0;
     // Stop the Bluetooth chat services
@@ -273,7 +256,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
-  private void connectXMLtoJava(){
+  
+  private void connectXMLViewtoJava(){
     /**
      * Connect XML to UI
      */
@@ -307,6 +291,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     mTitle.setText(R.string.app_name);
   }
   
+  
   private void addUIClickListeners() {
     addTime.setOnClickListener(this);
     dataName.addTextChangedListener(this);
@@ -314,6 +299,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     subtractTime.setOnClickListener(this);
     startStop.setOnClickListener(this);
   }
+  
   
   private void addSensorListeners() {
     sensorManager.registerListener(this,
@@ -324,15 +310,30 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         SensorManager.SENSOR_DELAY_GAME);
   }
   
-  private void setupConnectedSensing() {
+  
+  private void setUnitFormatting() {
+    /**
+     * Formatting for acceleration units.
+     */
+    xAccelUnits.setText(Html
+        .fromHtml("meters/sec<sup><small>2</small></sup"));
+    yAccelUnits.setText(Html
+        .fromHtml("meters/sec<sup><small>2</small></sup"));
+    zAccelUnits.setText(Html
+        .fromHtml("meters/sec<sup><small>2</small></sup"));    
+  }
+ 
 
-    // Initialize the BluetoothService to perform Bluetooth connections
-    mBluetoothService = new PhysicsGizmoBluetoothService(this, mHandler);
-
-    // Initialize the buffer for outgoing messages
-    mOutStringBuffer = new StringBuffer("");
+  private void resetSensorOccuranceVariables() {
+    // TODO improve this. 
+    proximityOccurance = 0;
+    eventCount = 0;
+    photoTemp1 = 0;
+    photoTemp2 = 0;
+    photoTemp3 = 0;
   }
 
+  
   private void setupSensorSpinner() {
     /** 
      * Spinner for the user to select a sensor to use.
@@ -445,20 +446,34 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     });
   }
   
-  private void setUnitFormatting() {
-    /**
-     * Formatting for acceleration units.
-     */
-    xAccelUnits.setText(Html
-        .fromHtml("meters/sec<sup><small>2</small></sup"));
-    yAccelUnits.setText(Html
-        .fromHtml("meters/sec<sup><small>2</small></sup"));
-    zAccelUnits.setText(Html
-        .fromHtml("meters/sec<sup><small>2</small></sup"));    
+ 
+  private void requestBluetoothEnabled() {
+    if (!mBluetoothAdapter.isEnabled()) {
+      Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+      startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+      // Otherwise, setup the connection between the two phones
+    } else {
+      if (mBluetoothService == null) {
+        setupConnectedSensing();
+      }
+    }
   }
   
-  // Ask user to make phone discoverable
+  
+  private void setupConnectedSensing() {
+
+    // Initialize the BluetoothService to perform Bluetooth connections
+    mBluetoothService = new PhysicsGizmoBluetoothService(this, mHandler);
+
+    // Initialize the buffer for outgoing messages
+    mOutStringBuffer = new StringBuffer("");
+  }
+  
+  
   private void ensureDiscoverable() {
+    /**
+     * Prompt user to make phone discoverable over Bluetooth.
+     */
     if (D) {
       Log.d(TAG, "ensure discoverable");
     }
@@ -477,9 +492,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
   }
 
-  // Sends a message. @param message A string of text to send.
+  
   private void sendMessage(String message) {
-    // Check that we're actually connected before trying anything
+    /**
+     * Sends a message. @param message A string of text to send.
+     */
+    
     if (mBluetoothService.getState() !=
         PhysicsGizmoBluetoothService.STATE_CONNECTED) {
       Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
@@ -497,9 +515,11 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
-  // The Handler that gets information back from the
-  // PhysicsGizmoBluetoothService
+  
   private Handler mHandler = new Handler() {
+    /**
+     * The Handler receiving data from the PhysicsGizmoBluetoothService.
+     */
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
@@ -593,10 +613,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   };
 
+  
   public void displayEventOverBT() {
     proximityTimeOnly.setText(photoTime);
   }
 
+  
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     if (D) {
@@ -638,16 +660,18 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
-  // /////////////////////////////////////////////////////////////////////////
 
-  // Menu about the app
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
+    /**
+     *  About Menu.
+     */
     MenuInflater inflater = getMenuInflater();
     inflater.inflate(R.menu.menu, menu);
     return true;
   }
 
+  
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
@@ -675,8 +699,11 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
-  // Gets app setup to sense again
+  
   public void resetForSensing() {
+    /**
+     * Setup to sense again
+     */
     setupDate();
     photoTime = "0";
     startStop.setText(R.string.start_sensing);
@@ -691,14 +718,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     setSenseTime(senseTime);
     sensingTime.setText(String.valueOf(senseTime) + " sec");
     proximityTimeOnly.setText("");
-    proximityOccurance = 0;
-    eventCount = 0;
-    photoTemp1 = 0;
-    photoTemp2 = 0;
-    photoTemp3 = 0;
     photoBT = 0;
     photoSensor = 0;
     timeElapsed = 0;
+    resetSensorOccuranceVariables();
   }
 
   @Override
@@ -861,6 +884,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       e.printStackTrace();
     }
   }
+  
 
   public void email(Context context) {
     final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
