@@ -106,7 +106,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected int tempPulseTime1 = 0;
   protected int tempPulseTime2 = 0;
   protected int senseTime = 10;
-  protected int sensorType = 0;
   protected int proximityOccurance = 0;
   protected int eventCount = 0;
   protected int photoTemp1 = 0;
@@ -124,6 +123,16 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   // Debugging
   private final String TAG = "PhysicsGizmoActivity";
   private final boolean D = false;
+  
+  // Sensor Types
+  protected enum sensorTypes {
+    ACCEL,
+    PHOTO_ONE,
+    PHOTO_TWO,
+    PHOTO_PENDULUM
+  }
+  
+  protected sensorTypes currentSensor = sensorTypes.ACCEL;
 
   // Message types sent from the BluetoothChatService Handler
   public final static int MESSAGE_STATE_CHANGE = 1;
@@ -194,15 +203,13 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       Log.e(TAG, "- ON PAUSE -");
     }
     // Cancel photogate if screen turns off.
-    if ((isSensing) && (sensorType > 0)) {
+    if ((isSensing) && (currentSensor != sensorTypes.ACCEL)) {
       senseCountDownTimer.cancel();
       senseCountDownTimer.onFinish();
     }
     resetSensorOccuranceVariables();
 
   }
-
-
 
 
   @Override
@@ -259,7 +266,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   
   private void connectXMLViewtoJava(){
     /**
-     * Connect XML to UI
+     * Connect XML Layout to UI
      */
     startStop = (Button) findViewById(R.id.start_stop);
     howtoUse = (ImageButton) findViewById(R.id.how_to_use);
@@ -325,7 +332,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
  
 
   private void resetSensorOccuranceVariables() {
-    // TODO improve this. 
+    // TODO include all reset variables 
     proximityOccurance = 0;
     eventCount = 0;
     photoTemp1 = 0;
@@ -338,7 +345,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     /** 
      * Spinner for the user to select a sensor to use.
      */
-    
+ 
     // Sensing mode names
     final String MODE_NAME_ACCEL =
         getString(R.string.sensor_mode_name_accel);
@@ -381,11 +388,11 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           MyViewFlipper.setDisplayedChild(0);
           resetForSensing();
           contextualHelp.setText(R.string.accel_help);
-          sensorType = 0;
+          currentSensor = sensorTypes.ACCEL;
         } else if (MODE_NAME_PHOTO_PENDULUM.equals(selectedSensor)) {
           // Photogate view
           MyViewFlipper.setDisplayedChild(1);
-          sensorType = 3; // Pendulum
+          currentSensor = sensorTypes.PHOTO_PENDULUM;
           contextualHelp.setText(R.string.pendulum_help);
         } else if (MODE_NAME_PHOTO_ONE_PHONE.equals(selectedSensor)) {
           // Photogate with 1 phone
@@ -395,18 +402,19 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           MyViewFlipper.setDisplayedChild(1);
           resetForSensing();
           contextualHelp.setText(R.string.gate1_help);
-          sensorType = 1;
+          currentSensor = sensorTypes.PHOTO_ONE;
         } else if (MODE_NAME_PHOTO_TWO_PHONES.equals(selectedSensor)) {
           if (sensorAdapter.getCount() == 3) {
+            // TODO remove this check
             disabledStartButton = false;
             startStop.setEnabled(true);
             // Photogate view
             MyViewFlipper.setDisplayedChild(1);
-            sensorType = 3; // Pendulum
+            currentSensor = sensorTypes.PHOTO_PENDULUM;
             resetForSensing();
             contextualHelp.setText(R.string.pendulum_help);
           } else {
-            sensorType = 2; // Gate 2
+            currentSensor = sensorTypes.PHOTO_TWO;
             prepareEachPhoneForBluetoothPhotogate();
           }
         }
@@ -461,7 +469,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   
   
   private void setupConnectedSensing() {
-
     // Initialize the BluetoothService to perform Bluetooth connections
     mBluetoothService = new PhysicsGizmoBluetoothService(this, mHandler);
 
@@ -489,7 +496,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       Intent serverIntent = new Intent(this, DeviceListActivity.class);
       startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
     }
-
   }
 
   
@@ -497,13 +503,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     /**
      * Sends a message. @param message A string of text to send.
      */
-    
     if (mBluetoothService.getState() !=
         PhysicsGizmoBluetoothService.STATE_CONNECTED) {
-      Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, R.string.not_connected_verbose,
+          Toast.LENGTH_SHORT).show();
       return;
     }
-
     // Check that there's actually something to send
     if (message.length() > 0) {
       // Get the message bytes and tell the BTService to write
@@ -529,10 +534,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
         switch (msg.arg1) {
         case PhysicsGizmoBluetoothService.STATE_CONNECTED:
-          mTitle.setText(R.string.title_connected_to);
+          mTitle.setText(R.string.title_connected_to_label);
           mTitle.append(mConnectedDeviceName);
           setSenseTime(10);
-          sensorType = 2;
+          currentSensor = sensorTypes.PHOTO_TWO;
           sensorSpinner.setSelection(2, true);
           btOn = true;
           break;
@@ -552,10 +557,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         // construct a string from the valid bytes in the buffer
         String readMessage = new String(readBuf, 0, msg.arg1);
         if (readMessage.equals("startTimer")) {
-          // Change time colons to periods
-          currentName = currentName.replace(":", ".");
-          // Remove characters not allowed in file names
-          currentName = currentName.replace("?/\\<>*|", "");
+          currentName = createAllowedFilename(currentName);
           generateCsvFile(currentName + ".csv");
           startSensing();
         } else if (readMessage.equals("stopTimer")) {
@@ -611,8 +613,20 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         break;
       }
     }
+
   };
 
+  private String createAllowedFilename(String fileName) {
+    /**
+     * Sanitize string for a filename.
+     * -Change time colons to periods
+     * -Remove characters not allowed in file names
+     */
+    fileName = fileName.replace(":", ".");
+    fileName = fileName.replace("?/\\<>*|", "");
+    return fileName;
+  }
+  
   
   public void displayEventOverBT() {
     proximityTimeOnly.setText(photoTime);
@@ -678,12 +692,13 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     case R.id.about:
       AlertDialog.Builder aboutApp = new AlertDialog.Builder(this);
       aboutApp.setMessage(R.string.about_app);
-      aboutApp.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface arg0, int arg1) {
-        }
-      });
-      aboutApp.setNegativeButton("BrokenAirplane",
+      aboutApp.setPositiveButton(R.string.ok,
+          new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface arg0, int arg1) {
+            }
+          });
+      aboutApp.setNegativeButton(R.string.go_to_blog,
           new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface arg0, int arg1) {
@@ -729,8 +744,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     if (v == addTime) {
       if (isSensing) {
         return;
-      } else if ((readytoSend == true) && (sensorType == 2)) {
-        // Photogate pulse with two phones
+      } else if (readytoSend == true &&
+                 currentSensor == sensorTypes.PHOTO_TWO) {
         sendMessage("addTimer");
         if (disabledStartButton == true) {
           // If this was the stopping phone before,
@@ -745,14 +760,15 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           resetForSensing();
           contextualHelp.setText(R.string.gate2_start_help);
         }
-      } else if ((readytoSend == true) && (sensorType != 2)) {
+      } else if (readytoSend == true &&
+                 currentSensor != sensorTypes.PHOTO_TWO) {
         // Reset the contextual help on added time
         resetForSensing();
-        if (sensorType == 0) {
+        if (currentSensor == sensorTypes.ACCEL) {
           contextualHelp.setText(R.string.accel_help);
-        } else if (sensorType == 1) {
+        } else if (currentSensor == sensorTypes.PHOTO_ONE) {
           contextualHelp.setText(R.string.gate1_help);
-        } else if (sensorType == 3) {
+        } else if (currentSensor == sensorTypes.PHOTO_PENDULUM) {
           contextualHelp.setText(R.string.pendulum_help);
         }
       } else { // Normal add time
@@ -780,9 +796,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       } else if (readytoSend) {
         email(this);
       } else {
-        currentName = currentName.replace(":", ".");
-        // Not allowed characters
-        currentName = currentName.replace("?/\\<>*|", "");
+        currentName = createAllowedFilename(currentName);
         generateCsvFile(currentName + ".csv");
         startSensing();
         if (btOn == true) {
@@ -790,17 +804,17 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
       }
     } else if (v == howtoUse) { // Help button instructions
-      switch (sensorType) {
-      case 0:
+      switch (currentSensor) {
+      case ACCEL:
         whichInstructions = R.string.instructions_accel;
         break;
-      case 1:
+      case PHOTO_ONE:
         whichInstructions = R.string.instructions_photo1;
         break;
-      case 2:
+      case PHOTO_TWO:
         whichInstructions = R.string.instructions_photo2;
         break;
-      case 3:
+      case PHOTO_PENDULUM:
         whichInstructions = R.string.instructions_pendulum;
         break;
       }
@@ -822,7 +836,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     // warn user with toast before backing out of app.
     if (keyCode == KeyEvent.KEYCODE_BACK) { // Handle the back button
       if ((btOn == true)
-          && (mBluetoothService.getState() == PhysicsGizmoBluetoothService.STATE_CONNECTED)) {
+          && (mBluetoothService.getState() ==
+              PhysicsGizmoBluetoothService.STATE_CONNECTED)) {
         // Ask the user if they want to quit
         new AlertDialog.Builder(this)
             .setIcon(android.R.drawable.ic_dialog_alert)
@@ -858,7 +873,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       dir.mkdirs();
       csvFile = new File(dir, fileName);
       FileWriter writer = new FileWriter(csvFile);
-      if (sensorType == 0) {
+      if (currentSensor == sensorTypes.ACCEL) {
         writer.append("time (ms)");
         writer.append(","); // Comma Separated Values (csv)
         writer.append("x (m/m^2)");
@@ -870,7 +885,11 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         writer.flush();
         writer.close();
       }
-      if (sensorType > 0) {
+      if (currentSensor != sensorTypes.ACCEL) {
+        /**
+         * Could replace with else but leaving it specific in case of future
+         * sensors which are not photogates.
+         */
         // Photogate column headers
         writer.append("Event");
         writer.append(",");
@@ -889,25 +908,31 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   public void email(Context context) {
     final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
     emailIntent.setType("text/csv"); // MIME Type
-    emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Science Data"); // Prefill
-                                                                                // information
-    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "Attached is the "
-        + currentName + " data.");
+    emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+        R.string.email_subject);
+    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, R.string.email_body1
+        + currentName + R.string.email_body2);
     emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + csvFile));
-    context.startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+    context.startActivity(Intent.createChooser(emailIntent,
+        getString(R.string.send_email)));
   }
 
   public void startSensing() {
-    v.vibrate(500);
-    senseCountDownTimer = new CountDownTimer(senseTime * 1000, dt) {
+    final int one_second = 1000;
+    v.vibrate(one_second / 2);
+    senseCountDownTimer = new CountDownTimer(senseTime * one_second, dt) {
       @Override
       public void onTick(long millisUntilFinished) {
         if (isSensing == true) {
-          sensingTime.setText(String.valueOf(millisUntilFinished / 1000)
-              + " sec");
+          sensingTime.setText(String.valueOf(millisUntilFinished / one_second)
+              + R.string.timer_units);
         }
         timeElapsed += dt;
-        if (sensorType == 0) {
+        if (currentSensor == sensorTypes.ACCEL) {
+          /**
+           * TODO remove the duplication by looping through a data structure of
+           * all of the data to append.
+           */
           // Record the time in the csv for graphing purposes
           try {
             FileWriter writer = new FileWriter(csvFile, true);
@@ -924,7 +949,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           } catch (IOException e) {
             e.printStackTrace();
           }
-        } else if (sensorType > 0) {
+        } else if (currentSensor != sensorTypes.ACCEL) {
           if (newPhotoData == true) {
             try {
               FileWriter writer = new FileWriter(csvFile, true);
@@ -945,7 +970,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       @Override
       public void onFinish() {
         isSensing = false;
-        v.vibrate(500);
+        v.vibrate(one_second / 2);
+        // TODO remove hard coded text
         sensingTime.setText("Done");
         startStop.setText("Email/Upload");
         readytoSend = true;
@@ -973,6 +999,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
   // Change the time to sense
   public void setSenseTime(int seconds) {
+    // TODO Remove magic numbers
     if (seconds < 10) {
       senseTime = 10;
     } else if (seconds > 300) {
@@ -1006,8 +1033,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
   @Override
   public void onSensorChanged(SensorEvent event) {
-    switch (sensorType) {
-    case 0: // Accelerometer
+    switch (currentSensor) {
+    case ACCEL:
       if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
         x = event.values[0];
@@ -1019,7 +1046,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         zValue.setText(String.valueOf(Math.round(z * 10) / 10.0));
       }
       break;
-    case 1: // Pulse 1 phone
+    case PHOTO_ONE:
       if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
         if (event.values[0] > 0) {
           if (isSensing) {
@@ -1056,7 +1083,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
       }
       break;
-    case 2: // Pulse 2 Phone
+    case PHOTO_TWO:
       if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
         if (event.values[0] > 0) {
           if (isSensing) {
@@ -1080,7 +1107,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
       }
       break;
-    case 3: // Pendulum
+    case PHOTO_PENDULUM:
       if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
         if (event.values[0] > 0) {
           if (isSensing) {
