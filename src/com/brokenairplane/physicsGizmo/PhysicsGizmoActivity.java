@@ -102,7 +102,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected float x = 0;
   protected float y = 0;
   protected float z = 0;
-  protected int dt = 100;
   protected int tempPulseTime1 = 0;
   protected int tempPulseTime2 = 0;
   protected int senseTime = 10;
@@ -739,6 +738,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     resetSensorOccuranceVariables();
   }
 
+  
   @Override
   public void onClick(View v) {
     if (v == addTime) {
@@ -862,11 +862,30 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
     return false;
   }
+  
+  private void addtoCSV(FileWriter writer, String[] rowData){
+    try {
+      final int len = rowData.length;
+      for (int col = 0; col < len; col++) {
+        writer.append(rowData[col]);
+        if (col < len - 1) {
+          writer.append(","); 
+        }
+      }
+      writer.append("\n");
+      writer.flush();
+      writer.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+      }
+  }
 
   private void generateCsvFile(String fileName) {
     try {
-      // Necessary to get the sdcard directory
-      // as it may be different for different phones
+      /**
+       * Necessary to get the sdcard directory as it may difer among phones.
+       * TODO replace with approved Android method.
+       */
       File sdCard = Environment.getExternalStorageDirectory();
       File dir = new File(sdCard.getAbsolutePath() + "/ScienceData");
       // Save in ScienceData folder on SD card
@@ -874,16 +893,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       csvFile = new File(dir, fileName);
       FileWriter writer = new FileWriter(csvFile);
       if (currentSensor == sensorTypes.ACCEL) {
-        writer.append("time (ms)");
-        writer.append(","); // Comma Separated Values (csv)
-        writer.append("x (m/m^2)");
-        writer.append(",");
-        writer.append("y (m/m^2)");
-        writer.append(',');
-        writer.append("z (m/m^2)");
-        writer.append("\n");
-        writer.flush();
-        writer.close();
+        final String[] accelColHeaders = {"time (ms)", "x (m/m^2)",
+                                             "y (m/m^2)", "z (m/m^2)"};
+        addtoCSV(writer, accelColHeaders);
       }
       if (currentSensor != sensorTypes.ACCEL) {
         /**
@@ -891,12 +903,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
          * sensors which are not photogates.
          */
         // Photogate column headers
-        writer.append("Event");
-        writer.append(",");
-        writer.append("time (ms)");
-        writer.append("\n");
-        writer.flush();
-        writer.close();
+        final String[] photoColHeaders = {"Event", "time (ms)"};
+        addtoCSV(writer, photoColHeaders);
       }
     } catch (IOException e) {
       // If the name of the file is illegal then no file is created
@@ -909,23 +917,26 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
     emailIntent.setType("text/csv"); // MIME Type
     emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-        R.string.email_subject);
-    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, R.string.email_body1
-        + currentName + R.string.email_body2);
+        getString(R.string.email_subject));
+    emailIntent.putExtra(android.content.Intent.EXTRA_TEXT,
+        getString(R.string.email_body1) + currentName +
+        getString(R.string.email_body2));
     emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + csvFile));
     context.startActivity(Intent.createChooser(emailIntent,
         getString(R.string.send_email)));
   }
 
+  
   public void startSensing() {
-    final int one_second = 1000;
+    final long one_second = 1000;
+    final long dt = 10;
     v.vibrate(one_second / 2);
-    senseCountDownTimer = new CountDownTimer(senseTime * one_second, dt) {
+    senseCountDownTimer = new CountDownTimer(senseTime * one_second, 100) {
       @Override
       public void onTick(long millisUntilFinished) {
         if (isSensing == true) {
           sensingTime.setText(String.valueOf(millisUntilFinished / one_second)
-              + R.string.timer_units);
+              + getString(R.string.timer_units));
         }
         timeElapsed += dt;
         if (currentSensor == sensorTypes.ACCEL) {
@@ -999,11 +1010,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
   // Change the time to sense
   public void setSenseTime(int seconds) {
-    // TODO Remove magic numbers
-    if (seconds < 10) {
-      senseTime = 10;
-    } else if (seconds > 300) {
-      senseTime = 300;
+    final int minTime = 10;
+    final int maxTime = 300;
+    if (seconds < minTime) {
+      senseTime = minTime;
+    } else if (seconds > maxTime) {
+      senseTime = maxTime;
     } else {
       senseTime = seconds;
     }
@@ -1036,11 +1048,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     switch (currentSensor) {
     case ACCEL:
       if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
         x = event.values[0];
         y = event.values[1];
         z = event.values[2];
-
+        
         xValue.setText(String.valueOf(Math.round(x * 10) / 10.0));
         yValue.setText(String.valueOf(Math.round(y * 10) / 10.0));
         zValue.setText(String.valueOf(Math.round(z * 10) / 10.0));

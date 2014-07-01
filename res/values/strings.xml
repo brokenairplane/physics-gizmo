@@ -12,7 +12,7 @@
     <string name="instructions_photo1">Pulse photogate:\n\nAn event is triggered each time the proximity sensor (usually in the upper left of the phone) is covered.\n\nUse it to count events.\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
     <string name="instructions_photo2">Pulse photogate with 2 phones:\n\n1. Click yes to turn on Bluetooth Discovery mode.\n2. Select another phone running Physics Gizmo from the list.\n3. The timer starts when the first phone\'s proximity sensor (usually in the upper left of the phone) is triggered.\n4.The timer stops when the second phone\'s proximity sensor is triggered.\n\nUse it to see how long it takes for an object to fall or roll down a ramp like Galileo\'s experiment.\n\nBluetooth range ~30 ft/10 m\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
     <string name="instructions_pendulum">Pendulum photogate:\n\nAn event is triggered for each completed full swing/period of a pendulum passing by the proximity sensor (usually in the upper left of the phone).\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
-    <string name="accel_help">    </string>
+    <string name="accel_help">&#160;</string>
     <string name="gate1_help">Triggers each time sensor is blocked</string>
     <string name="gate2_start_help">If Bluetooth is on, starts timer</string>
     <string name="gate2_stop_help">If Bluetooth is on, stops timer</string>
@@ -23,13 +23,13 @@
     <!-- Email/save data -->
     <string name="email_subject">Science Data</string>
     <string name="email_body1">Attached is the </string>
-    <string name="email_body2"> data.</string>
+    <string name="email_body2">&#160;data.</string>
     <string name="send_email">Send email</string>
     
     <!-- Label and button text -->
     <string name="add_time">Add time</string>
     <string name="cancel">Cancel</string>
-    <string name="data_label">Data: </string>
+    <string name="data_label">Data:&#160;</string>
     <string name="data_warning">Names cannot contain punctuation    </string>
     <string name="go_to_blog">Learn more</string>
     <string name="ok">OK</string>
@@ -41,7 +41,7 @@
     <!--  Sensor display -->
     <string name="event_label">Event:</string>
     <string name="event_units">ms</string>
-    <string name="timer_units"> sec</string>
+    <string name="timer_units">&#160;sec</string>
     <string name="x_label">X:</string>
     <string name="y_label">Y:</string>
     <string name="z_label">Z:</string>
