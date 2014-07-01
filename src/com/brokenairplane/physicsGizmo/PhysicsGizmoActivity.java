@@ -190,6 +190,11 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
     
     if (mBluetoothAdapter != null) {
+      /**
+       * TODO improve this so BT is turned on or off as needed but not asking
+       * too frequently or apart from 2 phone pairing. Perhaps have a dialog
+       * that waits until ready or fails back to one phone.
+       */
       requestBluetoothEnabled();
     }
   }
@@ -863,8 +868,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     return false;
   }
   
-  private void addtoCSV(FileWriter writer, String[] rowData){
+  private void addtoCSV(File csvFile, String[] rowData){
     try {
+      FileWriter writer = new FileWriter(csvFile, true);
       final int len = rowData.length;
       for (int col = 0; col < len; col++) {
         writer.append(rowData[col]);
@@ -881,34 +887,28 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   }
 
   private void generateCsvFile(String fileName) {
-    try {
+    /**
+     * Necessary to get the sdcard directory as it may difer among phones.
+     * TODO replace with approved Android method.
+     */
+    File sdCard = Environment.getExternalStorageDirectory();
+    File dir = new File(sdCard.getAbsolutePath() + "/ScienceData");
+    // Save in ScienceData folder on SD card
+    dir.mkdirs();
+    csvFile = new File(dir, fileName);
+    if (currentSensor == sensorTypes.ACCEL) {
+      final String[] accelColHeaders = {"time (ms)", "x (m/m^2)",
+                                        "y (m/m^2)", "z (m/m^2)"};
+      addtoCSV(csvFile, accelColHeaders);
+    }
+    if (currentSensor != sensorTypes.ACCEL) {
       /**
-       * Necessary to get the sdcard directory as it may difer among phones.
-       * TODO replace with approved Android method.
+       * Could replace with else but leaving it specific in case of future
+       * sensors which are not photogates.
        */
-      File sdCard = Environment.getExternalStorageDirectory();
-      File dir = new File(sdCard.getAbsolutePath() + "/ScienceData");
-      // Save in ScienceData folder on SD card
-      dir.mkdirs();
-      csvFile = new File(dir, fileName);
-      FileWriter writer = new FileWriter(csvFile);
-      if (currentSensor == sensorTypes.ACCEL) {
-        final String[] accelColHeaders = {"time (ms)", "x (m/m^2)",
-                                             "y (m/m^2)", "z (m/m^2)"};
-        addtoCSV(writer, accelColHeaders);
-      }
-      if (currentSensor != sensorTypes.ACCEL) {
-        /**
-         * Could replace with else but leaving it specific in case of future
-         * sensors which are not photogates.
-         */
-        // Photogate column headers
-        final String[] photoColHeaders = {"Event", "time (ms)"};
-        addtoCSV(writer, photoColHeaders);
-      }
-    } catch (IOException e) {
-      // If the name of the file is illegal then no file is created
-      e.printStackTrace();
+      // Photogate column headers
+      final String[] photoColHeaders = {"Event", "time (ms)"};
+      addtoCSV(csvFile, photoColHeaders);
     }
   }
   
@@ -945,34 +945,15 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
            * all of the data to append.
            */
           // Record the time in the csv for graphing purposes
-          try {
-            FileWriter writer = new FileWriter(csvFile, true);
-            writer.append(String.valueOf(timeElapsed));
-            writer.append(",");
-            writer.append(String.valueOf(x));
-            writer.append(",");
-            writer.append(String.valueOf(y));
-            writer.append(',');
-            writer.append(String.valueOf(z));
-            writer.append("\n");
-            writer.flush();
-            writer.close();
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
+          final String[] accelData = {String.valueOf(timeElapsed),
+                                      String.valueOf(x),
+                                      String.valueOf(y),
+                                      String.valueOf(z)};
+           addtoCSV(csvFile, accelData);
         } else if (currentSensor != sensorTypes.ACCEL) {
           if (newPhotoData == true) {
-            try {
-              FileWriter writer = new FileWriter(csvFile, true);
-              writer.append(String.valueOf(eventCount));
-              writer.append(",");
-              writer.append(photoTime);
-              writer.append("\n");
-              writer.flush();
-              writer.close();
-            } catch (IOException e) {
-              e.printStackTrace();
-            }
+            final String[] photoData = {String.valueOf(eventCount), photoTime};
+            addtoCSV(csvFile, photoData);
             newPhotoData = false;
           }
         }

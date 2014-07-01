@@ -22,7 +22,7 @@
     
     <!-- Email/save data -->
     <string name="email_subject">Science Data</string>
-    <string name="email_body1">Attached is the </string>
+    <string name="email_body1">Attached is the&#160;</string>
     <string name="email_body2">&#160;data.</string>
     <string name="send_email">Send email</string>
     
