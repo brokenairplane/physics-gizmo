@@ -64,23 +64,14 @@ import android.widget.ViewFlipper;
 
 public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   TextWatcher, SensorEventListener {
-  public Spinner sensorSpinner;
-  protected Spinner timeSpinner;
-  protected EditText dataName;
-  protected String currentName;
-  protected String photoTime = "0";
-  protected ImageButton addTime;
+  
+  // Buttons
+  protected Button startStop;
   protected ImageButton subtractTime;
   protected ImageButton howtoUse;
-  protected Button startStop;
-  protected boolean btOn = false;
-  protected boolean disabledStartButton = false;
-  protected boolean isSensing = false;
-  protected boolean readytoSend = false;
-  protected boolean fromBT = false;
-  protected boolean fromSensor = false;
-  protected boolean newPhotoData = false;
-  protected CountDownTimer senseCountDownTimer;
+  protected ImageButton addTime;
+  
+  // Views
   protected TextView btLabel;
   protected TextView btUnits;
   protected TextView contextualHelp;
@@ -98,25 +89,45 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected TextView xValue;
   protected TextView yValue;
   protected TextView zValue;
+  protected EditText dataName;
+ 
+  // State variables
+  protected boolean btOn = false;
+  protected boolean disabledStartButton = false;
+  protected boolean isSensing = false;
+  protected boolean readytoSend = false;
+  protected boolean fromBT = false;
+  protected boolean fromSensor = false;
+  protected boolean newPhotoData = false;
+  
+  protected String currentName;
+  protected String photoTime = "0";
+  
+  protected CountDownTimer senseCountDownTimer;
+  public Spinner sensorSpinner;
   protected SensorManager sensorManager;
+  
+  // Sensor info
   protected float x = 0;
   protected float y = 0;
   protected float z = 0;
-  protected int tempPulseTime1 = 0;
+  
+  //TODO factor this out
   protected int tempPulseTime2 = 0;
+  
   protected int senseTime = 10;
   protected int proximityOccurance = 0;
   protected int eventCount = 0;
+  
+  //TODO factor these out
   protected int photoTemp1 = 0;
   protected int photoTemp2 = 0;
   protected int photoTemp3 = 0;
   protected int photoBT = 0;
   protected int photoSensor = 0;
   protected int timeElapsed = 0;
-  protected int whichInstructions;
-  protected String fileName;
+  
   protected static File csvFile;
-  protected Vibrator v;
   protected ViewFlipper MyViewFlipper;
 
   // Debugging
@@ -131,6 +142,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     PHOTO_PENDULUM
   }
   
+  // Initialize
   protected sensorTypes currentSensor = sensorTypes.ACCEL;
 
   // Message types sent from the BluetoothChatService Handler
@@ -139,7 +151,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   public final static int MESSAGE_WRITE = 3;
   public final static int MESSAGE_DEVICE_NAME = 4;
   public final static int MESSAGE_TOAST = 5;
-  public final int START_TIMER = 6;
+  public final static int START_TIMER = 6;
 
   // Key names received from the BluetoothChatService Handler
   public final static String DEVICE_NAME = "device_name";
@@ -296,7 +308,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     xValue = (TextView) findViewById(R.id.x_value);
     yValue = (TextView) findViewById(R.id.y_value);
     zValue = (TextView) findViewById(R.id.z_value);
-    v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     MyViewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
     mTitle = (TextView) findViewById(R.id.mytitle);
     mTitle.setText(R.string.app_name);
@@ -731,7 +742,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     fromBT = false;
     fromSensor = false;
     newPhotoData = false;
-    tempPulseTime1 = 0;
     tempPulseTime2 = 0;
     senseTime = 10;
     setSenseTime(senseTime);
@@ -809,6 +819,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
       }
     } else if (v == howtoUse) { // Help button instructions
+      final int whichInstructions;
       switch (currentSensor) {
       case ACCEL:
         whichInstructions = R.string.instructions_accel;
@@ -822,6 +833,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       case PHOTO_PENDULUM:
         whichInstructions = R.string.instructions_pendulum;
         break;
+       default:
+         whichInstructions = R.string.instructions_accel;
       }
       AlertDialog.Builder instructions = new AlertDialog.Builder(this);
       instructions.setMessage(whichInstructions);
@@ -930,6 +943,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   public void startSensing() {
     final long one_second = 1000;
     final long dt = 10;
+    final Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     v.vibrate(one_second / 2);
     senseCountDownTimer = new CountDownTimer(senseTime * one_second, 100) {
       @Override
@@ -1024,6 +1038,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     // Not using this
   }
 
+  
   @Override
   public void onSensorChanged(SensorEvent event) {
     switch (currentSensor) {
@@ -1047,30 +1062,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
             // Count time from sensor covered to sensor uncovered
             photoTime = String.valueOf(tempPulseTime2);
             newPhotoData = true;
-            if (eventCount > 3) {
-              // Allows data events to scroll up the page
-              proximityOccurance1.setText(proximityOccurance2.getText());
-              proximityTime1.setText(proximityTime2.getText());
-              proximityOccurance2.setText(proximityOccurance3.getText());
-              proximityTime2.setText(proximityTime3.getText());
-              proximityOccurance3.setText(String.valueOf(eventCount));
-              proximityTime3.setText(photoTime);
-            } else {
-              switch (eventCount) {
-              case 1:
-                proximityOccurance1.setText(String.valueOf(eventCount));
-                proximityTime1.setText(String.valueOf(photoTime));
-                break;
-              case 2:
-                proximityOccurance2.setText(String.valueOf(eventCount));
-                proximityTime2.setText(String.valueOf(photoTime));
-                break;
-              case 3:
-                proximityOccurance3.setText(String.valueOf(eventCount));
-                proximityTime3.setText(String.valueOf(photoTime));
-                break;
-              }
-            }
+            updateEventDisplay(eventCount);
           }
         }
       }
@@ -1086,9 +1078,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
                 sendMessage("pulse");
 
                 if (fromBT == true) {
-                  // Reset the variables,
-                  // not needed right now but if later more
-                  // events are added this will be necessary.
+                  /**
+                   * Reset the variables, not needed right now but if later more
+                   * events are added this will be necessary.
+                   */
                   fromBT = false;
                   fromSensor = false;
                 }
@@ -1113,34 +1106,34 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               eventCount += 1;
               photoTime = String.valueOf(photoTemp2 - photoTemp1);
               newPhotoData = true;
-              if (eventCount > 3) { //
-                proximityOccurance1.setText(proximityOccurance2.getText());
-                proximityTime1.setText(proximityTime2.getText());
-                proximityOccurance2.setText(proximityOccurance3.getText());
-                proximityTime2.setText(proximityTime3.getText());
-                proximityOccurance3.setText(String.valueOf(eventCount));
-                proximityTime3.setText(String.valueOf(photoTime));
-              } else {
-                switch (eventCount) {
-                case 1:
-                  proximityOccurance1.setText(String.valueOf(eventCount));
-                  proximityTime1.setText(String.valueOf(photoTime));
-                  break;
-                case 2:
-                  proximityOccurance2.setText(String.valueOf(eventCount));
-                  proximityTime2.setText(String.valueOf(photoTime));
-                  break;
-                case 3:
-                  proximityOccurance3.setText(String.valueOf(eventCount));
-                  proximityTime3.setText(String.valueOf(photoTime));
-                  break;
-                }
-              }
+              updateEventDisplay(eventCount);
             }
           }
         }
       }
       break;
+    }
+  }
+
+  
+  private void updateEventDisplay(int eventCount) {
+    if (eventCount > 3) {
+      // Allows data events to scroll up the page.
+      proximityOccurance1.setText(proximityOccurance2.getText());
+      proximityTime1.setText(proximityTime2.getText());
+      proximityOccurance2.setText(proximityOccurance3.getText());
+      proximityTime2.setText(proximityTime3.getText());
+      proximityOccurance3.setText(String.valueOf(eventCount));
+      proximityTime3.setText(photoTime);
+    } else if (eventCount == 1) {
+        proximityOccurance1.setText(String.valueOf(eventCount));
+        proximityTime1.setText(String.valueOf(photoTime));
+    } else if (eventCount == 2) {
+        proximityOccurance2.setText(String.valueOf(eventCount));
+        proximityTime2.setText(String.valueOf(photoTime));
+    } else if (eventCount == 3) {
+        proximityOccurance3.setText(String.valueOf(eventCount));
+        proximityTime3.setText(String.valueOf(photoTime));
     }
   }
 }
