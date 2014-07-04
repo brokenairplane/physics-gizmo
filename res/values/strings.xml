@@ -12,7 +12,7 @@
     <string name="instructions_photo1">Pulse photogate:\n\nAn event is triggered each time the proximity sensor (usually in the upper left of the phone) is covered.\n\nUse it to count events.\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
     <string name="instructions_photo2">Pulse photogate with 2 phones:\n\n1. Click yes to turn on Bluetooth Discovery mode.\n2. Select another phone running Physics Gizmo from the list.\n3. The timer starts when the first phone\'s proximity sensor (usually in the upper left of the phone) is triggered.\n4.The timer stops when the second phone\'s proximity sensor is triggered.\n\nUse it to see how long it takes for an object to fall or roll down a ramp like Galileo\'s experiment.\n\nBluetooth range ~30 ft/10 m\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
     <string name="instructions_pendulum">Pendulum photogate:\n\nAn event is triggered for each completed full swing/period of a pendulum passing by the proximity sensor (usually in the upper left of the phone).\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
-    <string name="accel_help">&#160;</string>
+    <string name="accel_help">TODO</string>
     <string name="gate1_help">Triggers each time sensor is blocked</string>
     <string name="gate2_start_help">If Bluetooth is on, starts timer</string>
     <string name="gate2_stop_help">If Bluetooth is on, stops timer</string>
@@ -56,13 +56,20 @@
     <!--  Bluetooth -->
     <string name="bt_label">Time:</string>
     <string name="bt_not_enabled_leaving">Bluetooth was not enabled.</string>
+    <string name="bt_not_enabled_button_msg">Try Bluetooth Again</string>
     <string name="bt_sensing_interrupt">If you stop now, you will lose your Bluetooth connection and need to restart PhysicsGizmo on phones to reestablish a link.</string>
-    <string name="not_connected_msg">Not Connected</string>
+    <string name="bt_state_connected">CONNECTED</string>
+    <string name="bt_state_off">OFF</string>
+    <string name="bt_state_on">ON</string>
+    <string name="not_connected">Not Connected</string>
     <string name="not_connected_verbose">You are not connected to a device</string>
     <string name="send">Send</string>
     <string name="title_connecting">Connecting#8230;</string>
     <string name="title_connected_to_label">Connected: </string>
-    <string name="title_not_connected">Not Connected</string>
+    <string name="title_not_connected">Not Paired</string>
+    <string name="bt_pair_or_switch">Connect to another phone or switch sensors.</string>
+    <string name="bt_connect_or_switch">Connect Bluetooth or switch sensors.</string>
+    <string name="start_disabled_message">Check other phone</string>
 
     <!--  DeviceListActivity -->
     <string name="button_scan">Scan for devices</string>
