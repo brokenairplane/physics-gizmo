@@ -27,11 +27,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -193,9 +191,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 		
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		IntentFilter filter =
-		    new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-    this.registerReceiver(mReceiver, filter);
 	}
 
 
@@ -204,6 +199,15 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     super.onStart();
     if (D) {
       Log.e(TAG, "++ ON START ++");
+    }
+    
+    if (mBluetoothAdapter != null) {
+      /**
+       * TODO improve this so BT is turned on or off as needed but not asking
+       * too frequently or apart from 2 phone pairing. Perhaps have a dialog
+       * that waits until ready or fails back to one phone.
+       */
+      requestBluetoothEnabled();
     }
   }
 
@@ -269,7 +273,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     // Stop the Bluetooth chat services
     if (mBluetoothService != null) {
       mBluetoothService.stop();
-    this.unregisterReceiver(mReceiver);
     }
     if (D) {
       Log.e(TAG, "--- ON DESTROY ---");
@@ -292,7 +295,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     btUnits = (TextView) findViewById(R.id.bt_units);
     sensingTime = (TextView) findViewById(R.id.sensing_time);
     contextualHelp = (TextView) findViewById(R.id.contextual_help);
-    contextualHelp.setText(R.string.accel_help);
     proximityOccurance1 = (TextView) findViewById(R.id.prox_occurance1);
     proximityOccurance2 = (TextView) findViewById(R.id.prox_occurance2);
     proximityOccurance3 = (TextView) findViewById(R.id.prox_occurance3);
@@ -418,7 +420,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           currentSensor = sensorTypes.PHOTO_ONE;
         } else if (MODE_NAME_PHOTO_TWO_PHONES.equals(selectedSensor)) {
           if (sensorAdapter.getCount() == 3) {
-            // TODO remove this check, verify its no longer needed on 2.1+
+            // TODO remove this check
             disabledStartButton = false;
             startStop.setEnabled(true);
             // Photogate view
@@ -428,97 +430,46 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
             contextualHelp.setText(R.string.pendulum_help);
           } else {
             currentSensor = sensorTypes.PHOTO_TWO;
-            MyViewFlipper.setDisplayedChild(2);
-            initateBTProcess();
+            prepareEachPhoneForBluetoothPhotogate();
           }
+        }
+      }
+
+      private void prepareEachPhoneForBluetoothPhotogate() {
+        /**
+         * The primary phone starts the sensing, the other phone is the
+         * receiving phone (stops the sensing).
+         */
+        if (mTitle.getText().toString() ==
+            getString(R.string.title_not_paired)) {
+          ensureDiscoverable();
+          // Photogate 2 view
+          MyViewFlipper.setDisplayedChild(2);
+          resetForSensing();
+          contextualHelp
+              .setText(R.string.gate2_start_help);
+        } else {
+          // Photogate 2 view
+          MyViewFlipper.setDisplayedChild(2);
+          contextualHelp
+              .setText(R.string.gate2_stop_help);
+          disabledStartButton = true;
+          startStop.setEnabled(false);
+          startStop.setText("Check other phone");
         }
       }
 
       @Override
       public void onNothingSelected(AdapterView<?> parent) {
-        // TODO Auto-generated method stub 
-      }    
+        // TODO Auto-generated method stub
+        
+      }
+      
+      
     });
   }
   
-  
-  private void initateBTProcess() {
-    if (mBluetoothAdapter != null) {
-      /**
-       * TODO improve this so BT is turned on or off as needed but not asking
-       * too frequently or apart from 2 phone pairing. Perhaps have a dialog
-       * that waits until ready or fails back to one phone.
-       */
-      requestBluetoothEnabled();
-    }
-  }
-  
-  private void prepareEachPhoneForBluetoothPhotogate(String btConnected) {
-    /**
-     * The primary phone starts the sensing, the other phone is the
-     * receiving phone (stops the sensing).
-     */
-    if (btConnected == getString(R.string.bt_state_connected)){
-      if (mTitle.getText().toString() == getString(R.string.not_connected)) {
-        ensureDiscoverable();
-        // 2 phone Photogate view 1
-        resetForSensing();
-        contextualHelp.setText(R.string.gate2_start_help);
-      } else {
-        // 2 phone Photogate view 2
-        contextualHelp.setText(R.string.gate2_stop_help);
-        disabledStartButton = true;
-        startStop.setEnabled(false);
-        startStop.setText(R.string.start_disabled_message);
-      }
-    } else if (btConnected == getString(R.string.bt_state_on)) {
-      mTitle.setText(R.string.bt_pair_or_switch);
-      contextualHelp.setText(R.string.gate2_start_help);
-      disabledStartButton = true;
-      startStop.setEnabled(false);
-      startStop.setText(getString(R.string.title_connecting));
-    } else if (btConnected == getString(R.string.bt_state_off)) {
-      // TODO improve so try connecting again works.
-      contextualHelp.setText(R.string.gate2_start_help);
-      mTitle.setText(R.string.bt_connect_or_switch);
-      startStop.setText(R.string.bt_not_enabled_button_msg);
-    }
-  }
-  
-  
-  private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-    /**
-     * Used to determine if the phone is connected over Bluetooth.
-     * SO: http://stackoverflow.com/questions/9693755/detecting-state-changes-made-to-the-bluetoothadapter
-     */
-    @Override
-    public void onReceive(Context context, Intent intent) {
-      final String action = intent.getAction();
-
-      if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-        final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-                                             BluetoothAdapter.ERROR);
-        String btConnectedState = "OFF";
-        switch (state) {
-        case BluetoothAdapter.STATE_OFF:
-          btConnectedState = "OFF";
-          break;
-        case BluetoothAdapter.STATE_ON:
-          btConnectedState = "ON";
-          break;
-        case BluetoothAdapter.STATE_CONNECTED:
-          btConnectedState = "CONNECTED";
-          break;
-        default:
-          btConnectedState = "OFF";
-          break;
-        }
-        prepareEachPhoneForBluetoothPhotogate(btConnectedState);
-      }
-    }
-  };
  
-  
   private void requestBluetoothEnabled() {
     if (!mBluetoothAdapter.isEnabled()) {
       Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -610,7 +561,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           break;
         case PhysicsGizmoBluetoothService.STATE_LISTEN:
         case PhysicsGizmoBluetoothService.STATE_NONE:
-          mTitle.setText(R.string.title_not_connected);
+          mTitle.setText(R.string.title_not_paired);
           break;
         }
         break;
@@ -677,9 +628,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         break;
       }
     }
+
   };
 
-  
   private String createAllowedFilename(String fileName) {
     /**
      * Sanitize string for a filename.
@@ -724,7 +675,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         // User did not enable Bluetooth or an error occured
         Toast.makeText(this, R.string.bt_not_enabled_leaving,
             Toast.LENGTH_SHORT).show();
-        prepareEachPhoneForBluetoothPhotogate(getString(R.string.bt_state_off));
       }
       break;
     case REQUEST_DISCOVERABLE:
@@ -733,7 +683,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         Intent serverIntent = new Intent(this, DeviceListActivity.class);
         startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
       } else {
-        // TODO reconcile this with the broadcast receiver.
         contextualHelp.setText(R.string.gate2_not_connected_help);
       }
       break;
@@ -861,10 +810,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
       } else if (readytoSend) {
         email(this);
-      } else if (btOn == false) {
-        startStop.setText("Restarting...");
-        initateBTProcess();
-      }else {
+      } else {
         currentName = createAllowedFilename(currentName);
         generateCsvFile(currentName + ".csv");
         startSensing();
@@ -907,7 +853,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     // If back button is pressed while BT is synced,
     // warn user with toast before backing out of app.
     if (keyCode == KeyEvent.KEYCODE_BACK) { // Handle the back button
-      if ((btOn == true) && (mBluetoothService.getState() ==
+      if ((btOn == true)
+          && (mBluetoothService.getState() ==
               PhysicsGizmoBluetoothService.STATE_CONNECTED)) {
         // Ask the user if they want to quit
         new AlertDialog.Builder(this)
