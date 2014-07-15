@@ -198,16 +198,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   public void onStart() {
     super.onStart();
     if (D) {
-      Log.e(TAG, "++ ON START ++");
-    }
-    
-    if (mBluetoothAdapter != null) {
-      /**
-       * TODO improve this so BT is turned on or off as needed but not asking
-       * too frequently or apart from 2 phone pairing. Perhaps have a dialog
-       * that waits until ready or fails back to one phone.
-       */
-      requestBluetoothEnabled();
+      Log.e(TAG, "+++ ON START +++");
     }
   }
 
@@ -216,7 +207,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected void onPause() {
     super.onPause();
     if (D) {
-      Log.e(TAG, "- ON PAUSE -");
+      Log.e(TAG, "+++ ON PAUSE +++");
     }
     // Cancel photogate if screen turns off.
     if ((isSensing) && (currentSensor != sensorTypes.ACCEL)) {
@@ -232,7 +223,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected void onResume() {
     super.onResume();
     if (D) {
-      Log.e(TAG, "+ ON RESUME +");
+      Log.e(TAG, "+++ ON RESUME +++");
     }
 
     /**
@@ -254,7 +245,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   public void onStop() {
     super.onStop();
     if (D) {
-      Log.e(TAG, "-- ON STOP --");
+      Log.e(TAG, "+++ ON STOP +++");
     }
   }
 
@@ -275,7 +266,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       mBluetoothService.stop();
     }
     if (D) {
-      Log.e(TAG, "--- ON DESTROY ---");
+      Log.e(TAG, "+++ ON DESTROY +++");
     }
   }
 
@@ -310,7 +301,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     zValue = (TextView) findViewById(R.id.z_value);
     MyViewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
     mTitle = (TextView) findViewById(R.id.mytitle);
-    mTitle.setText(R.string.app_name);
+    mTitle.setText(R.string.title_not_paired);
   }
   
   
@@ -430,45 +421,44 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
             contextualHelp.setText(R.string.pendulum_help);
           } else {
             currentSensor = sensorTypes.PHOTO_TWO;
+            if (mBluetoothAdapter != null) {
+              requestBluetoothEnabled();
+            }
             prepareEachPhoneForBluetoothPhotogate();
           }
         }
       }
 
-      private void prepareEachPhoneForBluetoothPhotogate() {
-        /**
-         * The primary phone starts the sensing, the other phone is the
-         * receiving phone (stops the sensing).
-         */
-        if (mTitle.getText().toString() ==
-            getString(R.string.title_not_paired)) {
-          ensureDiscoverable();
-          // Photogate 2 view
-          MyViewFlipper.setDisplayedChild(2);
-          resetForSensing();
-          contextualHelp
-              .setText(R.string.gate2_start_help);
-        } else {
-          // Photogate 2 view
-          MyViewFlipper.setDisplayedChild(2);
-          contextualHelp
-              .setText(R.string.gate2_stop_help);
-          disabledStartButton = true;
-          startStop.setEnabled(false);
-          startStop.setText("Check other phone");
-        }
-      }
 
       @Override
-      public void onNothingSelected(AdapterView<?> parent) {
-        // TODO Auto-generated method stub
-        
-      }
-      
-      
+      public void onNothingSelected(AdapterView<?> parent) { 
+      }    
     });
   }
   
+  private void prepareEachPhoneForBluetoothPhotogate() {
+    /**
+     * The primary phone starts the sensing, the other phone is the
+     * receiving phone (stops the sensing).
+     */
+    if (mTitle.getText().toString() ==
+        getString(R.string.title_not_paired)) {
+      ensureDiscoverable();
+      // Photogate 2 view
+      MyViewFlipper.setDisplayedChild(2);
+      resetForSensing();
+      contextualHelp
+          .setText(R.string.gate2_start_help);
+    } else {
+      // Photogate 2 view
+      MyViewFlipper.setDisplayedChild(2);
+      contextualHelp
+          .setText(R.string.gate2_stop_help);
+      disabledStartButton = true;
+      startStop.setEnabled(false);
+      startStop.setText("Check other phone");
+    }
+  }
  
   private void requestBluetoothEnabled() {
     if (!mBluetoothAdapter.isEnabled()) {
@@ -477,6 +467,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       // Otherwise, setup the connection between the two phones
     } else {
       if (mBluetoothService == null) {
+        // TODO untangle this knot since both cases call this function.
         setupConnectedSensing();
       }
     }
@@ -555,11 +546,13 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           currentSensor = sensorTypes.PHOTO_TWO;
           sensorSpinner.setSelection(2, true);
           btOn = true;
+          prepareEachPhoneForBluetoothPhotogate();
           break;
         case PhysicsGizmoBluetoothService.STATE_CONNECTING:
           mTitle.setText(R.string.title_connecting);
           break;
         case PhysicsGizmoBluetoothService.STATE_LISTEN:
+          prepareEachPhoneForBluetoothPhotogate();
         case PhysicsGizmoBluetoothService.STATE_NONE:
           mTitle.setText(R.string.title_not_paired);
           break;
