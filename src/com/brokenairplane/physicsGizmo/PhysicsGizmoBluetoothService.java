@@ -59,11 +59,16 @@ public class PhysicsGizmoBluetoothService {
 	private int mState;
 
 	// Constants that indicate the current connection state
-	public static final int STATE_NONE = 0; // we're doing nothing
+  
+	//we're doing nothing
+	public static final int STATE_NONE = 0;
+	
 	// listening for incoming connections
 	public static final int STATE_LISTEN = 1;
+	
 	// initiating an outgoing connection
 	public static final int STATE_CONNECTING = 2;
+	
 	// connected to a remote device
 	public static final int STATE_CONNECTED = 3;
 

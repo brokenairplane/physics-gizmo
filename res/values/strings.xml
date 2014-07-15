@@ -64,12 +64,12 @@
     <string name="not_connected">Not Connected</string>
     <string name="not_connected_verbose">You are not connected to a device</string>
     <string name="send">Send</string>
-    <string name="title_connecting">Connecting#8230;</string>
+    <string name="title_connecting">Connecting</string>
     <string name="title_connected_to_label">Connected: </string>
     <string name="title_not_paired">Not Paired</string>
     <string name="bt_pair_or_switch">Connect to another phone or switch sensors.</string>
     <string name="bt_connect_or_switch">Connect Bluetooth or switch sensors.</string>
-    <string name="start_disabled_message">Check other phone</string>
+    <string name="button_disabled_message">Check other phone</string>
 
     <!--  DeviceListActivity -->
     <string name="button_scan">Scan for devices</string>
