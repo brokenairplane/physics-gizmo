@@ -111,18 +111,14 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected float x = 0;
   protected float y = 0;
   protected float z = 0;
-  
-  //TODO factor this out
-  protected int tempPulseTime2 = 0;
-  
+    
   protected int senseTime = 10;
   protected int proximityOccurance = 0;
   protected int eventCount = 0;
   
-  //TODO factor these out
+  //TODO localize if possible.
   protected int photoTemp1 = 0;
   protected int photoTemp2 = 0;
-  protected int photoTemp3 = 0;
   protected int photoBT = 0;
   protected int photoSensor = 0;
   protected int timeElapsed = 0;
@@ -343,7 +339,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     eventCount = 0;
     photoTemp1 = 0;
     photoTemp2 = 0;
-    photoTemp3 = 0;
   }
 
   
@@ -410,23 +405,12 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           contextualHelp.setText(R.string.gate1_help);
           currentSensor = sensorTypes.PHOTO_ONE;
         } else if (MODE_NAME_PHOTO_TWO_PHONES.equals(selectedSensor)) {
-          if (sensorAdapter.getCount() == 3) {
-            // TODO remove this check
-            disabledStartButton = false;
-            startStop.setEnabled(true);
-            // Photogate view
-            MyViewFlipper.setDisplayedChild(1);
-            currentSensor = sensorTypes.PHOTO_PENDULUM;
-            resetForSensing();
-            contextualHelp.setText(R.string.pendulum_help);
-          } else {
-            MyViewFlipper.setDisplayedChild(2);
-            currentSensor = sensorTypes.PHOTO_TWO;
-            if (mBluetoothAdapter != null) {
-              requestBluetoothEnabled();
-            }
-            prepareEachPhoneForBluetoothPhotogate(false);
+          MyViewFlipper.setDisplayedChild(2);
+          currentSensor = sensorTypes.PHOTO_TWO;
+          if (mBluetoothAdapter != null) {
+            requestBluetoothEnabled();
           }
+          prepareEachPhoneForBluetoothPhotogate(false);
         }
       }
 
@@ -736,7 +720,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     fromBT = false;
     fromSensor = false;
     newPhotoData = false;
-    tempPulseTime2 = 0;
     senseTime = 10;
     setSenseTime(senseTime);
     sensingTime.setText(String.valueOf(senseTime) + " sec");
@@ -1052,9 +1035,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         if (event.values[0] > 0) {
           if (isSensing) {
             eventCount += 1;
-            tempPulseTime2 = timeElapsed;
             // Count time from sensor covered to sensor uncovered
-            photoTime = String.valueOf(tempPulseTime2);
+            photoTime = String.valueOf(timeElapsed);
             newPhotoData = true;
             updateEventDisplay(eventCount);
           }
