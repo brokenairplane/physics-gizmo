@@ -83,4 +83,7 @@
     <!-- Options Menu -->
     <string name="connect">Connect a device</string>
     <string name="discoverable">Make discoverable</string>
+    
+    <!-- Message Types -->
+    <string name="receivedTime">receivedTime</string>
 </resources>

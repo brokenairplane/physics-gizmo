@@ -103,6 +103,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected String currentName;
   protected String photoTime = "0";
   
+  // Used to determine which phone initiated the BT sensing.
+  public Long timeSensorSwitched;
+  
   protected CountDownTimer senseCountDownTimer;
   public Spinner sensorSpinner;
   protected SensorManager sensorManager;
@@ -128,7 +131,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
   // Debugging
   private final String TAG = "PhysicsGizmoActivity";
-  private final boolean D = false;
+  private final boolean D = true;
   
   // Sensor Types
   protected enum sensorTypes {
@@ -410,7 +413,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           if (mBluetoothAdapter != null) {
             requestBluetoothEnabled();
           }
-          prepareEachPhoneForBluetoothPhotogate(false);
         }
       }
 
@@ -420,32 +422,36 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       }    
     });
   }
+ 
   
-  private void prepareEachPhoneForBluetoothPhotogate(boolean isConnected) {
+  private void prepareEachPhoneForBluetoothPhotogate(boolean isFirst) {
     /**
      * For 2 phone photogate sensing.
      * The primary phone starts the sensing, the other phone is the
      * receiving phone (stops the sensing).
      */
-    if (mTitle.getText().toString() ==
-        getString(R.string.title_not_paired)) {
-      ensureDiscoverable();
-    } else {
-      if (isConnected) {
-        contextualHelp.setText(R.string.gate2_start_help);
-        // TODO remove disabledStartButton variable and use isEnabled instead.
-        disabledStartButton = false;
-        startStop.setEnabled(true);
-      } else {
-        contextualHelp.setText(R.string.gate2_stop_help);
-        disabledStartButton = true;
-        startStop.setEnabled(false);
-        startStop.setText(R.string.button_disabled_message);
+    if (isFirst) {
+      contextualHelp.setText(R.string.gate2_start_help);
+      // TODO remove disabledStartButton variable and use isEnabled instead.
+      disabledStartButton = false;
+      startStop.setText(R.string.start_sensing);
+      startStop.setEnabled(true);
+      if (D) {
+        Log.d(TAG, "first");
       }
-      resetForSensing();
+    } else {
+      if (D) {
+        Log.d(TAG, "second");
+      }
+      contextualHelp.setText(R.string.gate2_stop_help);
+      disabledStartButton = true;
+      startStop.setText(R.string.button_disabled_message);
+      startStop.setEnabled(false);
     }
+    resetForSensing();
   }
  
+  
   private void requestBluetoothEnabled() {
     if (!mBluetoothAdapter.isEnabled()) {
       Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -466,6 +472,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
     // Initialize the buffer for outgoing messages
     mOutStringBuffer = new StringBuffer("");
+    ensureDiscoverable();
   }
   
   
@@ -512,6 +519,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
+  private void sendInitialTimeMessage(String timeMessage){
+    sendMessage(timeMessage);
+  }
+  
   
   private Handler mHandler = new Handler() {
     /**
@@ -529,12 +540,14 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           mTitle.setText(R.string.title_connected_to_label);
           mTitle.append(mConnectedDeviceName);
           setSenseTime(10);
-          currentSensor = sensorTypes.PHOTO_TWO;
           btOn = true;
-          prepareEachPhoneForBluetoothPhotogate(true);
+          //MyViewFlipper.setDisplayedChild(2);
+          currentSensor = sensorTypes.PHOTO_TWO;
+          String initialTimeMessage = getString(R.string.receivedTime)
+              .concat(String.valueOf(timeSensorSwitched)); 
+          sendInitialTimeMessage(initialTimeMessage);
           break;
         case PhysicsGizmoBluetoothService.STATE_CONNECTING:
-          prepareEachPhoneForBluetoothPhotogate(true);
           mTitle.setText(R.string.title_connecting);
           break;
         case PhysicsGizmoBluetoothService.STATE_LISTEN:
@@ -549,6 +562,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         byte[] readBuf = (byte[]) msg.obj;
         // construct a string from the valid bytes in the buffer
         String readMessage = new String(readBuf, 0, msg.arg1);
+        if (D){
+          Log.d(TAG,readMessage);
+        }
         if (readMessage.equals("startTimer")) {
           currentName = createAllowedFilename(currentName);
           generateCsvFile(currentName + ".csv");
@@ -556,7 +572,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         } else if (readMessage.equals("stopTimer")) {
           stopSensing();
         } else if (readMessage.equals("addTimer")) {
-          if (readytoSend == true) {
+          if (readytoSend) {
             if (disabledStartButton == true) {
               // If phone stopped before, when time
               // is added, keep it as the stopping phone.
@@ -591,6 +607,17 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               newPhotoData = true;
               displayEventOverBT();
             }
+          }
+        } else if (readMessage.startsWith(getString(R.string.receivedTime))) {
+          // TODO replace all hardcoded message types.
+          // See which phone connected first based on the fileName timestamp.
+          Long initializedTime =
+              Long.parseLong(readMessage.substring(getString(
+                  R.string.receivedTime).length()));
+          if (timeSensorSwitched > initializedTime) {
+            prepareEachPhoneForBluetoothPhotogate(true);
+          } else {
+            prepareEachPhoneForBluetoothPhotogate(false);
           }
         }
         break;
@@ -714,7 +741,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
      */
     setupDate();
     photoTime = "0";
-    startStop.setText(R.string.start_sensing);
+    if (currentSensor != sensorTypes.PHOTO_TWO) {
+      startStop.setText(R.string.start_sensing);
+    }
     isSensing = false;
     readytoSend = false;
     fromBT = false;
@@ -736,24 +765,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     if (v == addTime) {
       if (isSensing) {
         return;
-      } else if (readytoSend == true &&
-                 currentSensor == sensorTypes.PHOTO_TWO) {
+      } else if (!readytoSend && currentSensor == sensorTypes.PHOTO_TWO) {
         sendMessage("addTimer");
-        if (disabledStartButton == true) {
-          // If this was the stopping phone before,
-          // make it the stopping phone again
-          resetForSensing();
-          contextualHelp.setText(R.string.gate2_stop_help);
-          startStop.setEnabled(false);
-          startStop.setText("Check other phone");
-        } else if (disabledStartButton == false) {
-          // If this was the starting phone before,
-          // make it the stopping phone
-          resetForSensing();
-          contextualHelp.setText(R.string.gate2_start_help);
-        }
-      } else if (readytoSend == true &&
-                 currentSensor != sensorTypes.PHOTO_TWO) {
+        setSenseTime(senseTime + 10);
+      } else if (readytoSend && currentSensor != sensorTypes.PHOTO_TWO) {
         // Reset the contextual help on added time
         resetForSensing();
         if (currentSensor == sensorTypes.ACCEL) {
@@ -825,6 +840,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
+  
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
     // If back button is pressed while BT is synced,
@@ -858,6 +874,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     return false;
   }
   
+  
   private void addtoCSV(File csvFile, String[] rowData){
     try {
       FileWriter writer = new FileWriter(csvFile, true);
@@ -876,6 +893,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       }
   }
 
+  
   private void generateCsvFile(String fileName) {
     /**
      * Necessary to get the sdcard directory as it may difer among phones.
@@ -968,14 +986,18 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     isSensing = true;
   }
 
+  
   public void stopSensing() {
     senseCountDownTimer.cancel();
     senseCountDownTimer.onFinish();
   }
 
+  
   public void setupDate() {
     // Time for file name
     Date cal = Calendar.getInstance().getTime(); // Get current time
+    Calendar cal2 = Calendar.getInstance();
+    timeSensorSwitched = cal2.getTimeInMillis();
     currentName = cal.toLocaleString();
     dataName.setText(currentName);
   }
@@ -994,22 +1016,26 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     sensingTime.setText(String.valueOf(senseTime) + " sec");
   }
 
+  
   @Override
   public void afterTextChanged(Editable s) {
     // If the name of the data changed then change the file name.
     currentName = s.toString();
   }
 
+  
   @Override
   public void beforeTextChanged(CharSequence s, int start, int count, int after) {
     // Not using this
   }
 
+  
   @Override
   public void onTextChanged(CharSequence s, int start, int before, int count) {
     // Not using this
   }
 
+  
   @Override
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
     // Not using this
