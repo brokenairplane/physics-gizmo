@@ -548,7 +548,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           btOn = true;
           //MyViewFlipper.setDisplayedChild(2);
           currentSensor = sensorTypes.PHOTO_TWO;
-          String initialTimeMessage = getString(R.string.receivedTime)
+          String initialTimeMessage = getString(R.string.received_time_msg)
               .concat(String.valueOf(timeSensorSwitched)); 
           sendInitialTimeMessage(initialTimeMessage);
           break;
@@ -570,13 +570,14 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         if (D){
           Log.d(TAG,readMessage);
         }
-        if (readMessage.equals("startTimer")) {
+        if (readMessage.equals(getString(R.string.start_timer_msg))) {
           currentName = createAllowedFilename(currentName);
+          // TODO remove hard coded string
           generateCsvFile(currentName + ".csv");
           startSensing();
-        } else if (readMessage.equals("stopTimer")) {
+        } else if (readMessage.equals(R.string.stop_timer_msg)) {
           stopSensing();
-        } else if (readMessage.equals("addTimer")) {
+        } else if (readMessage.equals(getString(R.string.add_timer_msg))) {
           if (readytoSend) {
             if (disabledStartButton == true) {
               // If phone stopped before, when time
@@ -584,7 +585,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               resetForSensing();
               contextualHelp.setText(R.string.gate2_stop_help);
               startStop.setEnabled(false);
-              startStop.setText("Check other phone");
+              startStop.setText(getString(R.string.button_disabled_message));
             } else if (disabledStartButton == false) {
               // If phone started before, when time
               // is added, keep it as the starting phone.
@@ -594,9 +595,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           } else {
             setSenseTime(senseTime + 10);
           }
-        } else if (readMessage.equals("subtractTimer")) {
+        } else if (readMessage.equals(getString(R.string.subtract_timer_msg))) {
           setSenseTime(senseTime - 10);
-        } else if (readMessage.equals("pulse")) {
+        } else if (readMessage.equals(getString(R.string.pulse_msg))) {
           // Photogate data sent
           if (fromBT == false) {
             // If BT data not collected, get it
@@ -614,12 +615,13 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               startStop.performClick();
             }
           }
-        } else if (readMessage.startsWith(getString(R.string.receivedTime))) {
+        } else if (readMessage.startsWith(getString(
+            R.string.received_time_msg))) {
           // TODO replace all hardcoded message types.
           // See which phone connected first based on the fileName timestamp.
           Long initializedTime =
               Long.parseLong(readMessage.substring(getString(
-                  R.string.receivedTime).length()));
+                  R.string.received_time_msg).length()));
           if (timeSensorSwitched > initializedTime) {
             prepareEachPhoneForBluetoothPhotogate(true);
           } else {
@@ -776,7 +778,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       if (isSensing) {
         return;
       } else if (readytoSend && currentSensor == sensorTypes.PHOTO_TWO) {
-        sendMessage("addTimer");
+        sendMessage(getString(R.string.add_timer_msg));
         if (disabledStartButton == true) {
           /**
            * If this was the stopping phone before,
@@ -785,7 +787,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           resetForSensing();
           contextualHelp.setText(R.string.gate2_stop_help);
           startStop.setEnabled(false);
-          startStop.setText("Check other phone");
+          startStop.setText(getString(R.string.button_disabled_message));
         } else if (disabledStartButton == false) {
           /**
            * If this was the starting phone before, make it the stopping phone.
@@ -806,7 +808,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       } else { // Normal add time
         setSenseTime(senseTime + 10);
         if (btOn == true) {
-          sendMessage("addTimer");
+          sendMessage(getString(R.string.add_timer_msg));
         }
       }
     } else if (v == subtractTime) {
@@ -816,14 +818,14 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         setSenseTime(senseTime - 10);
       }
       if (btOn == true) {
-        sendMessage("subtractTimer");
+        sendMessage(getString(R.string.subtract_timer_msg));
       }
     } else if (v == startStop) {
       if (isSensing) {
         senseCountDownTimer.cancel();
         senseCountDownTimer.onFinish();
         if (btOn == true) {
-          sendMessage("stopTimer");
+          sendMessage(getString(R.string.stop_timer_msg));
         }
       } else if (readytoSend) {
         email(this);
@@ -832,7 +834,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         generateCsvFile(currentName + ".csv");
         startSensing();
         if (btOn == true) {
-          sendMessage("startTimer");
+          sendMessage(getString(R.string.start_timer_msg));
         }
       }
     } else if (v == howtoUse) { // Help button instructions
@@ -998,7 +1000,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         isSensing = false;
         v.vibrate(one_second / 2);
         // TODO remove hard coded text
-        sensingTime.setText("Done");
+        sensingTime.setText(getString(R.string.timer_finished));
         if (startStop.isEnabled()) { 
           startStop.setText(getText(R.string.email_upload));
         }
@@ -1008,7 +1010,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     };
     senseCountDownTimer.start();
     if (!disabledStartButton) {
-      startStop.setText("Stop Sensing");
+      startStop.setText(getString(R.string.stop_sensing));
     }
     isSensing = true;
   }
@@ -1104,7 +1106,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               if (fromSensor == false) {
                 photoSensor = timeElapsed;
                 fromSensor = true;
-                sendMessage("pulse");
+                sendMessage(getString(R.string.pulse_msg));
                 if (fromBT == true) {
                   /**
                    * Reset the variables, not needed right now but if later more

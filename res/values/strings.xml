@@ -38,6 +38,8 @@
     <string name="subtract_time">Subtract time</string>
     <string name="sensors_prompt">Choose a type of sensor</string>
     <string name="start_sensing">Start Sensing</string>
+    <string name="stop_sensing">Stop Sensing</string>
+    <string name="timer_finished">Done</string>
     
     <!--  Sensor display -->
     <string name="event_label">Event:</string>
@@ -86,5 +88,11 @@
     <string name="discoverable">Make discoverable</string>
     
     <!-- Message Types -->
-    <string name="receivedTime">receivedTime</string>
+    <string name="add_timer_msg">addTimer</string>
+    <string name="received_time_msg">receivedTime</string>
+    <string name="start_timer_msg">startTimer</string>
+    <string name="stop_timer_msg">stopTimer</string>
+    <string name="subtract_timer_msg">subtractTimer</string>
+    <string name="pulse_msg">pulse</string>
+    
 </resources>
