@@ -12,7 +12,7 @@
     <string name="instructions_photo1">Pulse photogate:\n\nAn event is triggered each time the proximity sensor (usually in the upper left of the phone) is covered.\n\nUse it to count events.\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
     <string name="instructions_photo2">Pulse photogate with 2 phones:\n\n1. Click yes to turn on Bluetooth Discovery mode.\n2. Select another phone running Physics Gizmo from the list.\n3. The timer starts when the first phone\'s proximity sensor (usually in the upper left of the phone) is triggered.\n4.The timer stops when the second phone\'s proximity sensor is triggered.\n\nUse it to see how long it takes for an object to fall or roll down a ramp like Galileo\'s experiment.\n\nBluetooth range ~30 ft/10 m\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
     <string name="instructions_pendulum">Pendulum photogate:\n\nAn event is triggered for each completed full swing/period of a pendulum passing by the proximity sensor (usually in the upper left of the phone).\n\nPhysicsGizmo Instructions:\n1. Select your sensor\n2. Give your data a name or leave it with the time and date.\n3. Set the timer.\n4. Click start to collect data.\n5. Upload your data to analyze later (saved in the ScienceData folder on the SD card).</string>
-    <string name="accel_help">TODO</string>
+    <string name="accel_help">Measures the force on X,Y,Z axis of phone.</string>
     <string name="gate1_help">Triggers each time sensor is blocked</string>
     <string name="gate2_start_help">If Bluetooth is on, starts timer</string>
     <string name="gate2_stop_help">If Bluetooth is on, stops timer</string>
@@ -21,6 +21,7 @@
     <string name="stopped_help">Add more time to sense again</string>
     
     <!-- Email/save data -->
+    <string name="email_upload">Email / Upload</string>
     <string name="email_subject">Science Data</string>
     <string name="email_body1">Attached is the&#160;</string>
     <string name="email_body2">&#160;data.</string>

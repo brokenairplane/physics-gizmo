@@ -390,23 +390,24 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           disabledStartButton = false;
           startStop.setEnabled(true);
           MyViewFlipper.setDisplayedChild(0);
-          resetForSensing();
           contextualHelp.setText(R.string.accel_help);
           currentSensor = sensorTypes.ACCEL;
+          resetForSensing();
         } else if (MODE_NAME_PHOTO_PENDULUM.equals(selectedSensor)) {
           // Photogate view
           MyViewFlipper.setDisplayedChild(1);
           currentSensor = sensorTypes.PHOTO_PENDULUM;
           contextualHelp.setText(R.string.pendulum_help);
+          resetForSensing();
         } else if (MODE_NAME_PHOTO_ONE_PHONE.equals(selectedSensor)) {
           // Photogate with 1 phone
           disabledStartButton = false;
           startStop.setEnabled(true);
           // Photogate view
           MyViewFlipper.setDisplayedChild(1);
-          resetForSensing();
           contextualHelp.setText(R.string.gate1_help);
           currentSensor = sensorTypes.PHOTO_ONE;
+          resetForSensing();
         } else if (MODE_NAME_PHOTO_TWO_PHONES.equals(selectedSensor)) {
           MyViewFlipper.setDisplayedChild(2);
           currentSensor = sensorTypes.PHOTO_TWO;
@@ -447,6 +448,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       disabledStartButton = true;
       startStop.setText(R.string.button_disabled_message);
       startStop.setEnabled(false);
+      addTime.setEnabled(false);
+      subtractTime.setEnabled(false);
+      dataName.setEnabled(false);
     }
     resetForSensing();
   }
@@ -519,6 +523,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
   }
 
+  
   private void sendInitialTimeMessage(String timeMessage){
     sendMessage(timeMessage);
   }
@@ -606,6 +611,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               photoTime = String.valueOf(Math.abs(photoBT - photoSensor));
               newPhotoData = true;
               displayEventOverBT();
+              startStop.performClick();
             }
           }
         } else if (readMessage.startsWith(getString(R.string.receivedTime))) {
@@ -636,6 +642,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 
   };
 
+  
   private String createAllowedFilename(String fileName) {
     /**
      * Sanitize string for a filename.
@@ -743,6 +750,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     photoTime = "0";
     if (currentSensor != sensorTypes.PHOTO_TWO) {
       startStop.setText(R.string.start_sensing);
+      addTime.setEnabled(true);
+      subtractTime.setEnabled(true);
+      dataName.setEnabled(true);
     }
     isSensing = false;
     readytoSend = false;
@@ -765,9 +775,24 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     if (v == addTime) {
       if (isSensing) {
         return;
-      } else if (!readytoSend && currentSensor == sensorTypes.PHOTO_TWO) {
+      } else if (readytoSend && currentSensor == sensorTypes.PHOTO_TWO) {
         sendMessage("addTimer");
-        setSenseTime(senseTime + 10);
+        if (disabledStartButton == true) {
+          /**
+           * If this was the stopping phone before,
+           * make it the stopping phone again.
+           */
+          resetForSensing();
+          contextualHelp.setText(R.string.gate2_stop_help);
+          startStop.setEnabled(false);
+          startStop.setText("Check other phone");
+        } else if (disabledStartButton == false) {
+          /**
+           * If this was the starting phone before, make it the stopping phone.
+           */
+          resetForSensing();
+          contextualHelp.setText(R.string.gate2_start_help);
+        }
       } else if (readytoSend && currentSensor != sensorTypes.PHOTO_TWO) {
         // Reset the contextual help on added time
         resetForSensing();
@@ -974,7 +999,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         v.vibrate(one_second / 2);
         // TODO remove hard coded text
         sensingTime.setText("Done");
-        startStop.setText("Email/Upload");
+        if (startStop.isEnabled()) { 
+          startStop.setText(getText(R.string.email_upload));
+        }
         readytoSend = true;
         contextualHelp.setText(R.string.stopped_help);
       }
@@ -1078,7 +1105,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
                 photoSensor = timeElapsed;
                 fromSensor = true;
                 sendMessage("pulse");
-
                 if (fromBT == true) {
                   /**
                    * Reset the variables, not needed right now but if later more
