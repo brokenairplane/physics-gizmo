@@ -188,6 +188,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
 		setupSensorSpinner();
 		setUnitFormatting();
 		
+		sensorSpinner.setSelection(0, false);  // Default is accelerometer.
+		
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 	}
@@ -378,7 +380,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
 
     sensorSpinner.setAdapter(sensorAdapter);
-    sensorSpinner.setSelection(0, true);  // Default is accelerometer.
     sensorSpinner.setOnItemSelectedListener(
       new AdapterView.OnItemSelectedListener() {
       @Override
@@ -572,8 +573,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         }
         if (readMessage.equals(getString(R.string.start_timer_msg))) {
           currentName = createAllowedFilename(currentName);
-          // TODO remove hard coded string
-          generateCsvFile(currentName + ".csv");
+          generateCsvFile(currentName + "." + getString(R.string.filetype_csv));
           startSensing();
         } else if (readMessage.equals(R.string.stop_timer_msg)) {
           stopSensing();
@@ -651,8 +651,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
      * -Change time colons to periods
      * -Remove characters not allowed in file names
      */
-    fileName = fileName.replace(":", ".");
-    fileName = fileName.replace("?/\\<>*|", "");
+    fileName = fileName.replaceAll("[\":?/\\<>*|]", "_");
+    Log.d(TAG, fileName);
     return fileName;
   }
   
@@ -831,7 +831,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         email(this);
       } else {
         currentName = createAllowedFilename(currentName);
-        generateCsvFile(currentName + ".csv");
+        generateCsvFile(currentName + "." + getString(R.string.filetype_csv));
         startSensing();
         if (btOn == true) {
           sendMessage(getString(R.string.start_timer_msg));
@@ -954,7 +954,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
         getString(R.string.email_subject));
     emailIntent.putExtra(android.content.Intent.EXTRA_TEXT,
-        getString(R.string.email_body1) + currentName +
+        getString(R.string.email_body1) + createAllowedFilename(currentName) +
         getString(R.string.email_body2));
     emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + csvFile));
     context.startActivity(Intent.createChooser(emailIntent,
@@ -1049,7 +1049,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   @Override
   public void afterTextChanged(Editable s) {
     // If the name of the data changed then change the file name.
-    currentName = s.toString();
+    currentName = createAllowedFilename(s.toString());
   }
 
   

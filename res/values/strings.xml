@@ -26,12 +26,12 @@
     <string name="email_body1">Attached is the&#160;</string>
     <string name="email_body2">&#160;data.</string>
     <string name="send_email">Send email</string>
+    <string name="filetype_csv">csv</string>
     
     <!-- Label and button text -->
     <string name="add_time">Add time</string>
     <string name="cancel">Cancel</string>
     <string name="data_label">Data:&#160;</string>
-    <string name="data_warning">Names cannot contain punctuation    </string>
     <string name="go_to_blog">Learn more</string>
     <string name="ok">OK</string>
     <string name="quit">Are you sure you want to leave?</string>
@@ -40,6 +40,11 @@
     <string name="start_sensing">Start Sensing</string>
     <string name="stop_sensing">Stop Sensing</string>
     <string name="timer_finished">Done</string>
+    <string name="initial_time">10 sec</string>
+    <string name="empty_unit_text">           </string>
+    <string name="empty_value_text">        </string>
+    <string name="empty_occurance">   </string>
+    <string name="empty_prox_time">     </string>
     
     <!--  Sensor display -->
     <string name="event_label">Event:</string>
