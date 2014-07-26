@@ -20,6 +20,11 @@ package com.brokenairplane.physicsGizmo;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -70,6 +75,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected ImageButton subtractTime;
   protected ImageButton howtoUse;
   protected ImageButton addTime;
+  protected ImageButton udp;
   
   // Views
   protected TextView btLabel;
@@ -278,6 +284,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
      */
     startStop = (Button) findViewById(R.id.start_stop);
     howtoUse = (ImageButton) findViewById(R.id.how_to_use);
+    udp = (ImageButton) findViewById(R.id.udp_button);
     dataName = (EditText) findViewById(R.id.data_name);
     addTime = (ImageButton) findViewById(R.id.add_time);
     subtractTime = (ImageButton) findViewById(R.id.subtract_time);
@@ -310,6 +317,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     addTime.setOnClickListener(this);
     dataName.addTextChangedListener(this);
     howtoUse.setOnClickListener(this);
+    udp.setOnClickListener(this);
     subtractTime.setOnClickListener(this);
     startStop.setOnClickListener(this);
   }
@@ -864,10 +872,41 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
             }
           });
       instructions.show();
+    } else if (v == udp) {
+      runUdpServer();
     }
   }
 
   
+  private void runUdpServer() {
+    final int UDP_SERVER_PORT = 7166;
+    
+    String udpMsg = "I am here" + UDP_SERVER_PORT;
+    DatagramSocket ds = null;
+    try {
+        ds = new DatagramSocket();
+        InetAddress serverAddr = InetAddress.getByName("192.168.1.78");
+        DatagramPacket dp;
+        dp = new DatagramPacket(udpMsg.getBytes(), udpMsg.length(), serverAddr, UDP_SERVER_PORT);
+        ds.send(dp);
+    } catch (SocketException e) {
+        e.printStackTrace();
+    }catch (UnknownHostException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        if (ds != null) {
+            ds.close();
+        }
+    }
+  }
+  
+  
+
+
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
     // If back button is pressed while BT is synced,

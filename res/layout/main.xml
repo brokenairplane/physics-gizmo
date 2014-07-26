@@ -26,12 +26,23 @@
             android:prompt="@string/sensors_prompt"/>
 
         <ImageButton
-            android:id="@+id/how_to_use"
+            android:id="@+id/udp_button"
             android:layout_width="47dp"
             android:layout_height="47dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="16dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerInside"
+            android:src="@drawable/question" />
+
+        <ImageButton
+            android:id="@+id/how_to_use"
+            android:layout_width="47dp"
+            android:layout_height="47dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="73dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/how_to_use"
             android:scaleType="centerInside"
