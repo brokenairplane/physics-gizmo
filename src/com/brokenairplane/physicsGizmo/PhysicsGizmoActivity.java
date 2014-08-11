@@ -20,11 +20,6 @@ package com.brokenairplane.physicsGizmo;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -75,7 +70,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   protected ImageButton subtractTime;
   protected ImageButton howtoUse;
   protected ImageButton addTime;
-  protected ImageButton udp;
   
   // Views
   protected TextView btLabel;
@@ -179,26 +173,24 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   private PhysicsGizmoBluetoothService mBluetoothService = null;
   
  
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		if (D) {
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    
+    if (D) {
       Log.e(TAG, "+++ ON CREATE +++");
     }
-		
-		setContentView(R.layout.main);
-		connectXMLViewtoJava();
-		addUIClickListeners();
-		addSensorListeners();
-		setupDate(); //Get date for the title of the csv file
-		setupSensorSpinner();
-		setUnitFormatting();
-		
-		sensorSpinner.setSelection(0, false);  // Default is accelerometer.
-		
-		// Get local Bluetooth adapter
-		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-	}
+    
+    setContentView(R.layout.main);
+    connectXMLViewtoJava();
+    addUIClickListeners();
+    addSensorListeners();
+    setupDate(); //Get date for the title of the csv file
+    setupSensorSpinner();
+    setUnitFormatting();
+    
+    // Get local Bluetooth adapter
+    mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+  }
 
 
   @Override
@@ -284,7 +276,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
      */
     startStop = (Button) findViewById(R.id.start_stop);
     howtoUse = (ImageButton) findViewById(R.id.how_to_use);
-    udp = (ImageButton) findViewById(R.id.udp_button);
     dataName = (EditText) findViewById(R.id.data_name);
     addTime = (ImageButton) findViewById(R.id.add_time);
     subtractTime = (ImageButton) findViewById(R.id.subtract_time);
@@ -317,7 +308,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     addTime.setOnClickListener(this);
     dataName.addTextChangedListener(this);
     howtoUse.setOnClickListener(this);
-    udp.setOnClickListener(this);
     subtractTime.setOnClickListener(this);
     startStop.setOnClickListener(this);
   }
@@ -388,6 +378,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     }
 
     sensorSpinner.setAdapter(sensorAdapter);
+    sensorSpinner.setSelection(0, true);  // Default is accelerometer.
     sensorSpinner.setOnItemSelectedListener(
       new AdapterView.OnItemSelectedListener() {
       @Override
@@ -579,13 +570,13 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         if (D){
           Log.d(TAG,readMessage);
         }
-        if (readMessage.equals(getString(R.string.start_timer_msg))) {
+        if (readMessage.equals("startTimer")) {
           currentName = createAllowedFilename(currentName);
-          generateCsvFile(currentName + "." + getString(R.string.filetype_csv));
+          generateCsvFile(currentName + ".csv");
           startSensing();
-        } else if (readMessage.equals(R.string.stop_timer_msg)) {
+        } else if (readMessage.equals("stopTimer")) {
           stopSensing();
-        } else if (readMessage.equals(getString(R.string.add_timer_msg))) {
+        } else if (readMessage.equals("addTimer")) {
           if (readytoSend) {
             if (disabledStartButton == true) {
               // If phone stopped before, when time
@@ -593,7 +584,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
               resetForSensing();
               contextualHelp.setText(R.string.gate2_stop_help);
               startStop.setEnabled(false);
-              startStop.setText(getString(R.string.button_disabled_message));
+              startStop.setText("Check other phone");
             } else if (disabledStartButton == false) {
               // If phone started before, when time
               // is added, keep it as the starting phone.
@@ -603,9 +594,9 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
           } else {
             setSenseTime(senseTime + 10);
           }
-        } else if (readMessage.equals(getString(R.string.subtract_timer_msg))) {
+        } else if (readMessage.equals("subtractTimer")) {
           setSenseTime(senseTime - 10);
-        } else if (readMessage.equals(getString(R.string.pulse_msg))) {
+        } else if (readMessage.equals("pulse")) {
           // Photogate data sent
           if (fromBT == false) {
             // If BT data not collected, get it
@@ -659,8 +650,8 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
      * -Change time colons to periods
      * -Remove characters not allowed in file names
      */
-    fileName = fileName.replaceAll("[\":?/\\<>*|]", "_");
-    Log.d(TAG, fileName);
+    fileName = fileName.replace(":", ".");
+    fileName = fileName.replace("?/\\<>*|", "");
     return fileName;
   }
   
@@ -839,7 +830,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
         email(this);
       } else {
         currentName = createAllowedFilename(currentName);
-        generateCsvFile(currentName + "." + getString(R.string.filetype_csv));
+        generateCsvFile(currentName + ".csv");
         startSensing();
         if (btOn == true) {
           sendMessage(getString(R.string.start_timer_msg));
@@ -872,41 +863,10 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
             }
           });
       instructions.show();
-    } else if (v == udp) {
-      runUdpServer();
     }
   }
 
   
-  private void runUdpServer() {
-    final int UDP_SERVER_PORT = 7166;
-    
-    String udpMsg = "I am here" + UDP_SERVER_PORT;
-    DatagramSocket ds = null;
-    try {
-        ds = new DatagramSocket();
-        InetAddress serverAddr = InetAddress.getByName("192.168.1.78");
-        DatagramPacket dp;
-        dp = new DatagramPacket(udpMsg.getBytes(), udpMsg.length(), serverAddr, UDP_SERVER_PORT);
-        ds.send(dp);
-    } catch (SocketException e) {
-        e.printStackTrace();
-    }catch (UnknownHostException e) {
-        e.printStackTrace();
-    } catch (IOException e) {
-        e.printStackTrace();
-    } catch (Exception e) {
-        e.printStackTrace();
-    } finally {
-        if (ds != null) {
-            ds.close();
-        }
-    }
-  }
-  
-  
-
-
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
     // If back button is pressed while BT is synced,
@@ -993,7 +953,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
     emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
         getString(R.string.email_subject));
     emailIntent.putExtra(android.content.Intent.EXTRA_TEXT,
-        getString(R.string.email_body1) + createAllowedFilename(currentName) +
+        getString(R.string.email_body1) + currentName +
         getString(R.string.email_body2));
     emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + csvFile));
     context.startActivity(Intent.createChooser(emailIntent,
@@ -1087,7 +1047,7 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
   @Override
   public void afterTextChanged(Editable s) {
     // If the name of the data changed then change the file name.
-    currentName = createAllowedFilename(s.toString());
+    currentName = s.toString();
   }
 
   
