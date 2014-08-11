@@ -1038,7 +1038,6 @@ public class PhysicsGizmoActivity extends Activity implements OnClickListener,
       public void onFinish() {
         isSensing = false;
         v.vibrate(one_second / 2);
-        // TODO remove hard coded text
         sensingTime.setText(getString(R.string.timer_finished));
         if (startStop.isEnabled()) { 
           startStop.setText(getText(R.string.email_upload));
